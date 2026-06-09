@@ -150,6 +150,16 @@ export async function createStorage(config) {
         filePath: path.join(config.uploadsDir, file.storedName)
       };
     },
+    getLatestFile() {
+      const file = state.files.find((entry) => !isExpired(entry.expiresAt));
+      if (!file) {
+        return null;
+      }
+      return {
+        ...file,
+        filePath: path.join(config.uploadsDir, file.storedName)
+      };
+    },
     async markFileDownloaded(id) {
       const file = state.files.find((entry) => entry.id === id);
       if (!file) {

@@ -1,3 +1,5 @@
+import { copyText } from "./lib/clipboard.js";
+
 const translations = {
   en: {
     "brand.note": "Shared clipboard, fixed links, and small file transfer for your local network.",
@@ -28,6 +30,7 @@ const translations = {
     "actions.createLink": "Create",
     "actions.upload": "Upload",
     "actions.open": "Open",
+    "actions.download": "Download",
     "actions.useLive": "Use clipboard text",
     "status.connecting": "Connecting",
     "status.live": "Live",
@@ -203,11 +206,7 @@ function setSelectedFile(file) {
   setUploadProgress(0);
 }
 
-async function copyText(value) {
-  await navigator.clipboard.writeText(value);
-}
-
-function createResultCard({ title, subtitle, href, expiresAt }) {
+function createResultCard({ title, subtitle, href, expiresAt, primaryActionLabel = t("actions.open") }) {
   const card = document.createElement("div");
   card.className = "result-card";
 
@@ -230,7 +229,7 @@ function createResultCard({ title, subtitle, href, expiresAt }) {
   openButton.href = href;
   openButton.target = "_blank";
   openButton.rel = "noreferrer";
-  openButton.textContent = t("actions.open");
+  openButton.textContent = primaryActionLabel;
 
   const copyButton = document.createElement("button");
   copyButton.type = "button";
@@ -257,7 +256,8 @@ function renderPasteResult(paste) {
       title: t("paste.created"),
       subtitle: href,
       href,
-      expiresAt: paste.expiresAt
+      expiresAt: paste.expiresAt,
+      primaryActionLabel: t("actions.open")
     })
   );
 }
@@ -274,7 +274,8 @@ function renderFileResult(file) {
         size: String(Math.max(1, Math.round(file.sizeBytes / 1024)))
       }),
       href,
-      expiresAt: file.expiresAt
+      expiresAt: file.expiresAt,
+      primaryActionLabel: t("actions.download")
     })
   );
 }
@@ -350,8 +351,26 @@ function bindLiveEvents() {
     if (payload.type === "live:snapshot" || payload.type === "live:updated") {
       liveTextarea.value = payload.content || "";
       updateLiveTimestamp(payload.updatedAt);
+      return;
+    }
+
+    if (payload.type === "file:snapshot" || payload.type === "file:updated") {
+      renderFileResult(payload);
     }
   };
+}
+
+async function loadLatestFile() {
+  try {
+    const payload = await api("/api/files/latest");
+    renderFileResult(payload);
+  } catch (error) {
+    if (error.message === "File not found.") {
+      fileResult.textContent = t("file.empty");
+      return;
+    }
+    throw error;
+  }
 }
 
 async function createPaste() {
@@ -502,6 +521,7 @@ async function boot() {
   applyLanguage();
   setActiveTab(state.activeTab);
   await loadLiveClipboard();
+  await loadLatestFile();
   bindLiveEvents();
   bindFileInteractions();
 

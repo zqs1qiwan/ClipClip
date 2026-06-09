@@ -64,3 +64,36 @@ test("file upload keeps the original decoded name and returns a download link", 
     });
   }
 });
+
+test("latest uploaded file is discoverable for other devices", async () => {
+  const { server, baseUrl } = await startServer();
+
+  try {
+    const initialResponse = await fetch(`${baseUrl}/api/files/latest`);
+    assert.equal(initialResponse.status, 404);
+
+    const uploadResponse = await fetch(`${baseUrl}/api/files`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-File-Name": "shared-note.txt"
+      },
+      body: "hello from another device"
+    });
+
+    assert.equal(uploadResponse.status, 201);
+    const uploadPayload = await uploadResponse.json();
+
+    const latestResponse = await fetch(`${baseUrl}/api/files/latest`);
+    assert.equal(latestResponse.status, 200);
+
+    const latestPayload = await latestResponse.json();
+    assert.equal(latestPayload.id, uploadPayload.id);
+    assert.equal(latestPayload.fileName, "shared-note.txt");
+    assert.match(latestPayload.downloadUrl, /^\/api\/files\/[^/]+\/download$/);
+  } finally {
+    await new Promise((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+});

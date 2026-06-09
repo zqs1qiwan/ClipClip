@@ -72,6 +72,16 @@ function decodeHeaderFileName(value) {
   }
 }
 
+function serializeFile(file) {
+  return {
+    id: file.id,
+    fileName: file.originalName,
+    sizeBytes: file.sizeBytes,
+    expiresAt: file.expiresAt,
+    downloadUrl: `/api/files/${file.id}/download`
+  };
+}
+
 class UploadLimitStream extends Transform {
   constructor(limitBytes) {
     super();
@@ -151,9 +161,10 @@ export function createApp({ config, storage }) {
       expiresAt: file.expiresAt,
       sizeBytes: file.sizeBytes
     });
+    return file;
   }
 
-  function broadcastLive(message) {
+  function broadcastEvent(message) {
     const payload = sseMessage(message);
     for (const client of clients) {
       client.write(payload);
@@ -191,7 +202,7 @@ export function createApp({ config, storage }) {
           return;
         }
         const live = await storage.setLiveClipboard(content);
-        broadcastLive({ type: "live:updated", ...live });
+        broadcastEvent({ type: "live:updated", ...live });
         json(res, 200, live);
         return;
       }
@@ -203,6 +214,10 @@ export function createApp({ config, storage }) {
           Connection: "keep-alive"
         });
         res.write(sseMessage({ type: "live:snapshot", ...storage.getLiveClipboard() }));
+        const latestFile = storage.getLatestFile();
+        if (latestFile) {
+          res.write(sseMessage({ type: "file:snapshot", ...serializeFile(latestFile) }));
+        }
         clients.add(res);
         req.on("close", () => clients.delete(res));
         return;
@@ -235,7 +250,18 @@ export function createApp({ config, storage }) {
       }
 
       if (req.method === "POST" && url.pathname === "/api/files") {
-        await handleFileUpload(req, res);
+        const file = await handleFileUpload(req, res);
+        broadcastEvent({ type: "file:updated", ...serializeFile(file) });
+        return;
+      }
+
+      if (req.method === "GET" && url.pathname === "/api/files/latest") {
+        const file = storage.getLatestFile();
+        if (!file) {
+          json(res, 404, { error: "File not found." });
+          return;
+        }
+        json(res, 200, serializeFile(file));
         return;
       }
 
@@ -246,13 +272,7 @@ export function createApp({ config, storage }) {
           json(res, 404, { error: "File not found." });
           return;
         }
-        json(res, 200, {
-          id: file.id,
-          fileName: file.originalName,
-          sizeBytes: file.sizeBytes,
-          expiresAt: file.expiresAt,
-          downloadUrl: `/api/files/${file.id}/download`
-        });
+        json(res, 200, serializeFile(file));
         return;
       }
 
