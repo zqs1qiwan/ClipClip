@@ -15,29 +15,35 @@
             <span class="badge" id="connection-badge">Connecting</span>
           </div>
           <p class="brand-note" data-i18n="brand.note">
-            Internal clipboard and quick transfer tool for your local network.
+            Shared clipboard, fixed links, and small file transfer for your local network.
           </p>
         </div>
 
         <div class="toolbar">
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button class="lang-button is-active" type="button" data-lang="en">EN</button>
-            <button class="lang-button" type="button" data-lang="zh">中</button>
-          </div>
           <div class="endpoint-box">
             <span class="endpoint-label" data-i18n="topbar.endpointLabel">Access</span>
             <code class="endpoint-value" id="endpoint-value">http://clip.clip:5678</code>
           </div>
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button class="lang-button" type="button" data-lang="zh">中</button>
+            <button class="lang-button is-active" type="button" data-lang="en">EN</button>
+          </div>
         </div>
       </header>
 
+      <nav class="tabbar" aria-label="ClipClip tools">
+        <button class="tab-button is-active" type="button" data-tab="live" data-i18n="tabs.live">Clipboard</button>
+        <button class="tab-button" type="button" data-tab="paste" data-i18n="tabs.paste">Share Link</button>
+        <button class="tab-button" type="button" data-tab="files" data-i18n="tabs.files">Files</button>
+      </nav>
+
       <main class="workspace">
-        <section class="panel live-panel">
-          <div class="panel-title-row">
-            <div>
+        <section class="tool-panel" data-panel="live">
+          <div class="panel-header">
+            <div class="panel-copy">
               <h1 data-i18n="live.title">Live Clipboard</h1>
               <p class="panel-hint" data-i18n="live.hint">
-                Sync one shared text box across devices on the LAN.
+                Everyone on the LAN sees the same text box in real time.
               </p>
             </div>
             <div class="inline-actions">
@@ -54,75 +60,82 @@
             placeholder="Paste or type text here"
           ></textarea>
 
-          <div class="panel-foot">
+          <footer class="panel-footer">
             <span class="muted-text" id="live-updated-at">Waiting for first update.</span>
+          </footer>
+        </section>
+
+        <section class="tool-panel" data-panel="paste" hidden>
+          <div class="panel-header">
+            <div class="panel-copy">
+              <h1 data-i18n="paste.title">Fixed Share Link</h1>
+              <p class="panel-hint" data-i18n="paste.hint">
+                Freeze a piece of text into a read-only link.
+              </p>
+            </div>
+            <div class="inline-actions">
+              <button id="paste-fill-live-button" class="secondary-button" type="button" data-i18n="actions.useLive">
+                Use clipboard text
+              </button>
+              <button id="paste-create-button" type="button" data-i18n="actions.createLink">Create</button>
+            </div>
+          </div>
+
+          <div class="split-layout">
+            <div class="input-column">
+              <textarea
+                id="paste-textarea"
+                aria-label="Paste source"
+                data-i18n-placeholder="paste.placeholder"
+                placeholder="Text for a fixed share link"
+              ></textarea>
+            </div>
+
+            <aside class="result-box" id="paste-result">No share link yet.</aside>
           </div>
         </section>
 
-        <section class="side-stack">
-          <section class="panel">
-            <div class="panel-title-row compact">
-              <div>
-                <h2 data-i18n="paste.title">Fixed Paste Link</h2>
-                <p class="panel-hint" data-i18n="paste.hint">
-                  Create a read-only link from the current text.
-                </p>
+        <section class="tool-panel" data-panel="files" hidden>
+          <div class="panel-header">
+            <div class="panel-copy">
+              <h1 data-i18n="file.title">Small File Drop</h1>
+              <p class="panel-hint" data-i18n="file.hint">
+                Send a small file to another device with a simple download link.
+              </p>
+            </div>
+            <button id="file-upload-button" type="button" data-i18n="actions.upload">Upload</button>
+          </div>
+
+          <div class="split-layout">
+            <div class="file-box">
+              <label class="upload-box" for="file-input">
+                <input id="file-input" type="file" />
+                <span id="file-input-label" data-i18n="file.select">Choose a file</span>
+              </label>
+              <p class="muted-text selection-meta" id="file-selection-meta" data-i18n="file.selectHint">
+                Good for quick transfers within the upload size limit.
+              </p>
+              <div class="progress-track" aria-hidden="true">
+                <span id="upload-progress-bar"></span>
               </div>
-              <div class="inline-actions">
-                <button id="paste-fill-live-button" class="secondary-button" type="button" data-i18n="actions.useLive">
-                  Use live
-                </button>
-                <button id="paste-create-button" type="button" data-i18n="actions.createLink">Create</button>
-              </div>
+              <p class="muted-text" id="upload-status" data-i18n="file.idle">Ready.</p>
             </div>
 
-            <textarea
-              id="paste-textarea"
-              class="compact-textarea"
-              aria-label="Paste source"
-              data-i18n-placeholder="paste.placeholder"
-              placeholder="Create a fixed paste link from this text"
-            ></textarea>
-
-            <div class="result-box" id="paste-result">No paste created yet.</div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-title-row compact">
-              <div>
-                <h2 data-i18n="file.title">Small File Drop</h2>
-                <p class="panel-hint" data-i18n="file.hint">
-                  Upload a small file and open it from another device.
-                </p>
-              </div>
-              <button id="file-upload-button" type="button" data-i18n="actions.upload">Upload</button>
-            </div>
-
-            <label class="upload-box" for="file-input">
-              <input id="file-input" type="file" />
-              <span id="file-input-label" data-i18n="file.select">Choose a file</span>
-            </label>
-            <p class="muted-text selection-meta" id="file-selection-meta" data-i18n="file.selectHint">
-              Files up to the configured limit can be shared.
-            </p>
-
-            <div class="result-box" id="file-result">No file uploaded yet.</div>
-          </section>
+            <aside class="result-box" id="file-result">No file uploaded yet.</aside>
+          </div>
         </section>
       </main>
     </div>
 
     <template id="paste-view-template">
       <div class="paste-shell">
-        <section class="panel paste-panel">
-          <div class="panel-title-row compact">
-            <div>
-              <h2 data-i18n="paste.viewTitle">Paste</h2>
+        <section class="tool-panel paste-panel">
+          <div class="panel-header">
+            <div class="panel-copy">
+              <h1 data-i18n="paste.viewTitle">Shared Paste</h1>
               <p class="panel-hint" data-i18n="paste.viewHint">Read-only content</p>
             </div>
-            <div class="inline-actions">
-              <button id="paste-view-copy-button" type="button" data-i18n="actions.copy">Copy</button>
-            </div>
+            <button id="paste-view-copy-button" type="button" data-i18n="actions.copy">Copy</button>
           </div>
           <pre id="paste-view-content"></pre>
           <p class="muted-text" id="paste-view-meta"></p>

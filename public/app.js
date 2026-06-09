@@ -1,20 +1,26 @@
 const translations = {
   en: {
-    "brand.note": "Internal clipboard and quick transfer tool for your local network.",
+    "brand.note": "Shared clipboard, fixed links, and small file transfer for your local network.",
     "topbar.endpointLabel": "Access",
+    "tabs.live": "Clipboard",
+    "tabs.paste": "Share Link",
+    "tabs.files": "Files",
     "live.title": "Live Clipboard",
-    "live.hint": "Sync one shared text box across devices on the LAN.",
+    "live.hint": "Everyone on the LAN sees the same text box in real time.",
     "live.placeholder": "Paste or type text here",
-    "paste.title": "Fixed Paste Link",
-    "paste.hint": "Create a read-only link from the current text.",
-    "paste.placeholder": "Text for a fixed paste link",
-    "paste.viewTitle": "Paste",
+    "paste.title": "Fixed Share Link",
+    "paste.hint": "Freeze a piece of text into a read-only link.",
+    "paste.placeholder": "Text for a fixed share link",
+    "paste.viewTitle": "Shared Paste",
     "paste.viewHint": "Read-only content",
-    "paste.created": "Paste link is ready.",
+    "paste.created": "Share link is ready.",
     "file.title": "Small File Drop",
-    "file.hint": "Upload a small file and open it from another device.",
+    "file.hint": "Send a small file to another device with a simple download link.",
     "file.select": "Choose a file",
-    "file.selectHint": "Files up to the configured limit can be shared.",
+    "file.selectHint": "Good for quick transfers within the upload size limit.",
+    "file.idle": "Ready.",
+    "file.uploading": "Uploading...",
+    "file.uploaded": "Upload complete.",
     "actions.copy": "Copy",
     "actions.copyLink": "Copy link",
     "actions.clear": "Clear",
@@ -22,37 +28,44 @@ const translations = {
     "actions.createLink": "Create",
     "actions.upload": "Upload",
     "actions.open": "Open",
-    "actions.useLive": "Use live",
+    "actions.useLive": "Use clipboard text",
     "status.connecting": "Connecting",
     "status.live": "Live",
     "status.reconnecting": "Reconnecting",
     "live.waiting": "Waiting for first update.",
     "live.updated": "Last synced: {time}",
-    "paste.empty": "No paste created yet.",
+    "paste.empty": "No share link yet.",
     "paste.required": "Paste content is required.",
     "file.empty": "No file uploaded yet.",
     "file.selectFirst": "Select a file first.",
     "file.selected": "Selected: {name} ({size} KB)",
     "file.kb": "{name} ({size} KB)",
     "paste.expires": "Expires: {time}",
+    "time.never": "Never",
     "error.generic": "Something went wrong."
   },
   zh: {
-    "brand.note": "内网使用的共享剪贴板和快速传输工具。",
+    "brand.note": "适合局域网内部使用的共享剪贴板、固定链接和小文件传输。",
     "topbar.endpointLabel": "访问地址",
+    "tabs.live": "剪贴板",
+    "tabs.paste": "分享链接",
+    "tabs.files": "文件",
     "live.title": "实时剪贴板",
-    "live.hint": "同一局域网内多个设备共享同一个文本框。",
+    "live.hint": "局域网内的设备会实时看到同一个文本框。",
     "live.placeholder": "在这里粘贴或输入文本",
     "paste.title": "固定分享链接",
-    "paste.hint": "把当前文本生成只读链接。",
-    "paste.placeholder": "用于生成固定链接的文本",
+    "paste.hint": "把一段文本冻结成只读链接，方便转发。",
+    "paste.placeholder": "用于生成固定分享链接的文本",
     "paste.viewTitle": "分享内容",
     "paste.viewHint": "只读内容",
     "paste.created": "分享链接已生成。",
     "file.title": "小文件中转",
-    "file.hint": "上传一个小文件，再到另一台设备打开。",
+    "file.hint": "上传一个小文件，生成简单下载链接给其他设备。",
     "file.select": "选择文件",
-    "file.selectHint": "可分享不超过配置上限的小文件。",
+    "file.selectHint": "适合快速传小文件，大小受上传上限控制。",
+    "file.idle": "准备就绪。",
+    "file.uploading": "正在上传...",
+    "file.uploaded": "上传完成。",
     "actions.copy": "复制",
     "actions.copyLink": "复制链接",
     "actions.clear": "清空",
@@ -60,7 +73,7 @@ const translations = {
     "actions.createLink": "生成",
     "actions.upload": "上传",
     "actions.open": "打开",
-    "actions.useLive": "使用实时文本",
+    "actions.useLive": "使用剪贴板内容",
     "status.connecting": "连接中",
     "status.live": "已连接",
     "status.reconnecting": "重连中",
@@ -73,13 +86,17 @@ const translations = {
     "file.selected": "已选择：{name}（{size} KB）",
     "file.kb": "{name}（{size} KB）",
     "paste.expires": "过期时间：{time}",
-    "error.generic": "出现了一点问题。"
+    "time.never": "尚未同步",
+    "error.generic": "出了点问题。"
   }
 };
 
 const state = {
+  activeTab: localStorage.getItem("clipclip-active-tab") || "live",
   language: localStorage.getItem("clipclip-language") || "zh",
-  currentPaste: null
+  currentPaste: null,
+  currentFile: null,
+  selectedFile: null
 };
 
 const liveTextarea = document.querySelector("#live-textarea");
@@ -99,21 +116,51 @@ const fileSelectionMeta = document.querySelector("#file-selection-meta");
 const fileUploadButton = document.querySelector("#file-upload-button");
 const fileResult = document.querySelector("#file-result");
 const uploadBox = document.querySelector(".upload-box");
+const uploadStatus = document.querySelector("#upload-status");
+const uploadProgressBar = document.querySelector("#upload-progress-bar");
 
 function t(key, vars = {}) {
   const dict = translations[state.language] || translations.en;
   const template = dict[key] || translations.en[key] || key;
-  return Object.entries(vars).reduce((value, [name, replacement]) => {
-    return value.replace(`{${name}}`, replacement);
-  }, template);
+  return Object.entries(vars).reduce(
+    (value, [name, replacement]) => value.replace(`{${name}}`, replacement),
+    template
+  );
 }
 
 function formatTime(value) {
   if (!value) {
-    return state.language === "zh" ? "未同步" : "Never";
+    return t("time.never");
   }
   const locale = state.language === "zh" ? "zh-CN" : "en-US";
   return new Date(value).toLocaleString(locale);
+}
+
+function translateStaticText() {
+  document.documentElement.lang = state.language === "zh" ? "zh-CN" : "en";
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.placeholder = t(element.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll(".lang-button").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.lang === state.language);
+  });
+}
+
+function setActiveTab(tabName) {
+  state.activeTab = tabName;
+  localStorage.setItem("clipclip-active-tab", tabName);
+
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.tab === tabName);
+  });
+
+  document.querySelectorAll("[data-panel]").forEach((panel) => {
+    const isActive = panel.dataset.panel === tabName;
+    panel.hidden = !isActive;
+  });
 }
 
 function setConnectionState(mode) {
@@ -127,21 +174,33 @@ function updateLiveTimestamp(updatedAt) {
     liveUpdatedAt.textContent = t("live.waiting");
     return;
   }
+
   liveUpdatedAt.dataset.updatedAt = updatedAt;
   liveUpdatedAt.textContent = t("live.updated", { time: formatTime(updatedAt) });
 }
 
-function updateFileSelectionMeta(file) {
+function setUploadProgress(value) {
+  uploadProgressBar.style.inlineSize = `${Math.max(0, Math.min(100, value))}%`;
+}
+
+function setSelectedFile(file) {
+  state.selectedFile = file || null;
+
   if (!file) {
-    fileSelectionMeta.textContent = t("file.selectHint");
     fileInputLabel.textContent = t("file.select");
+    fileSelectionMeta.textContent = t("file.selectHint");
+    uploadStatus.textContent = t("file.idle");
+    setUploadProgress(0);
     return;
   }
+
   fileInputLabel.textContent = file.name;
   fileSelectionMeta.textContent = t("file.selected", {
     name: file.name,
     size: String(Math.max(1, Math.round(file.size / 1024)))
   });
+  uploadStatus.textContent = t("file.idle");
+  setUploadProgress(0);
 }
 
 async function copyText(value) {
@@ -204,6 +263,7 @@ function renderPasteResult(paste) {
 }
 
 function renderFileResult(file) {
+  state.currentFile = file;
   const href = `${window.location.origin}${file.downloadUrl}`;
   fileResult.innerHTML = "";
   fileResult.append(
@@ -220,21 +280,9 @@ function renderFileResult(file) {
 }
 
 function applyLanguage() {
-  document.documentElement.lang = state.language === "zh" ? "zh-CN" : "en";
-
-  document.querySelectorAll("[data-i18n]").forEach((element) => {
-    element.textContent = t(element.dataset.i18n);
-  });
-
-  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
-    element.placeholder = t(element.dataset.i18nPlaceholder);
-  });
-
-  document.querySelectorAll(".lang-button").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.lang === state.language);
-  });
-
+  translateStaticText();
   endpointValue.textContent = window.location.origin;
+  setConnectionState(connectionBadge.dataset.state || "connecting");
 
   if (liveUpdatedAt.dataset.updatedAt) {
     updateLiveTimestamp(liveUpdatedAt.dataset.updatedAt);
@@ -242,15 +290,17 @@ function applyLanguage() {
     liveUpdatedAt.textContent = t("live.waiting");
   }
 
-  updateFileSelectionMeta(fileInput.files?.[0] || null);
+  setSelectedFile(state.selectedFile);
 
   if (state.currentPaste) {
     renderPasteResult(state.currentPaste);
-  } else if (!pasteResult.querySelector(".result-card")) {
+  } else {
     pasteResult.textContent = t("paste.empty");
   }
 
-  if (!fileResult.querySelector(".result-card")) {
+  if (state.currentFile) {
+    renderFileResult(state.currentFile);
+  } else {
     fileResult.textContent = t("file.empty");
   }
 }
@@ -268,9 +318,11 @@ async function api(path, options = {}) {
 
   const isJson = response.headers.get("content-type")?.includes("application/json");
   const payload = isJson ? await response.json() : null;
+
   if (!response.ok) {
     throw new Error(payload?.error || t("error.generic"));
   }
+
   return payload;
 }
 
@@ -308,6 +360,7 @@ async function createPaste() {
     pasteResult.textContent = t("paste.required");
     return;
   }
+
   const payload = await api("/api/pastes", {
     method: "POST",
     body: JSON.stringify({ content })
@@ -315,28 +368,63 @@ async function createPaste() {
   renderPasteResult(payload);
 }
 
+function uploadFileWithProgress(file) {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("POST", "/api/files");
+    request.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    request.setRequestHeader("X-File-Name", encodeURIComponent(file.name));
+
+    request.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable) {
+        setUploadProgress((event.loaded / event.total) * 100);
+      }
+    });
+
+    request.addEventListener("load", () => {
+      let payload = {};
+      try {
+        payload = JSON.parse(request.responseText || "{}");
+      } catch {
+        reject(new Error(t("error.generic")));
+        return;
+      }
+
+      if (request.status >= 200 && request.status < 300) {
+        resolve(payload);
+        return;
+      }
+
+      reject(new Error(payload.error || t("error.generic")));
+    });
+
+    request.addEventListener("error", () => reject(new Error(t("error.generic"))));
+    request.send(file);
+  });
+}
+
 async function uploadFile() {
-  const file = fileInput.files?.[0];
+  const file = state.selectedFile || fileInput.files?.[0];
   if (!file) {
     fileResult.textContent = t("file.selectFirst");
     return;
   }
 
-  const response = await fetch("/api/files", {
-    method: "POST",
-    headers: {
-      "Content-Type": file.type || "application/octet-stream",
-      "X-File-Name": file.name
-    },
-    body: file
-  });
+  fileUploadButton.disabled = true;
+  uploadStatus.textContent = t("file.uploading");
+  setUploadProgress(3);
 
-  const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error || t("error.generic"));
+  try {
+    const payload = await uploadFileWithProgress(file);
+    uploadStatus.textContent = t("file.uploaded");
+    setUploadProgress(100);
+    renderFileResult(payload);
+  } catch (error) {
+    uploadStatus.textContent = error.message || t("error.generic");
+    setUploadProgress(0);
+  } finally {
+    fileUploadButton.disabled = false;
   }
-
-  renderFileResult(payload);
 }
 
 async function loadPasteView(pasteId) {
@@ -345,6 +433,7 @@ async function loadPasteView(pasteId) {
   const fragment = template.content.cloneNode(true);
   document.body.innerHTML = "";
   document.body.append(fragment);
+  translateStaticText();
   document.querySelector("#paste-view-content").textContent = payload.content;
   document.querySelector("#paste-view-meta").textContent = t("paste.expires", {
     time: formatTime(payload.expiresAt)
@@ -352,7 +441,6 @@ async function loadPasteView(pasteId) {
   document.querySelector("#paste-view-copy-button").addEventListener("click", async () => {
     await copyText(payload.content);
   });
-  applyLanguage();
 }
 
 function bindLanguageEvents() {
@@ -365,9 +453,15 @@ function bindLanguageEvents() {
   });
 }
 
+function bindTabEvents() {
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    button.addEventListener("click", () => setActiveTab(button.dataset.tab));
+  });
+}
+
 function bindFileInteractions() {
   fileInput.addEventListener("change", () => {
-    updateFileSelectionMeta(fileInput.files?.[0] || null);
+    setSelectedFile(fileInput.files?.[0] || null);
   });
 
   ["dragenter", "dragover"].forEach((eventName) => {
@@ -389,8 +483,8 @@ function bindFileInteractions() {
     if (!files?.length) {
       return;
     }
-    fileInput.files = files;
-    updateFileSelectionMeta(files[0]);
+    setSelectedFile(files[0]);
+    setActiveTab("files");
   });
 }
 
@@ -404,7 +498,9 @@ async function boot() {
     return;
   }
 
+  bindTabEvents();
   applyLanguage();
+  setActiveTab(state.activeTab);
   await loadLiveClipboard();
   bindLiveEvents();
   bindFileInteractions();
@@ -416,6 +512,7 @@ async function boot() {
   liveClearButton.addEventListener("click", () => saveLiveClipboard(""));
   pasteFillLiveButton.addEventListener("click", () => {
     pasteTextarea.value = liveTextarea.value;
+    setActiveTab("paste");
   });
   pasteCreateButton.addEventListener("click", createPaste);
   fileUploadButton.addEventListener("click", uploadFile);

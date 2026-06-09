@@ -38,6 +38,18 @@ function isExpired(expiresAt) {
   return Boolean(expiresAt) && new Date(expiresAt).getTime() <= Date.now();
 }
 
+async function moveFile(sourcePath, targetPath, fileOps = fs) {
+  try {
+    await fileOps.rename(sourcePath, targetPath);
+  } catch (error) {
+    if (error?.code !== "EXDEV") {
+      throw error;
+    }
+    await fileOps.copyFile(sourcePath, targetPath);
+    await fileOps.rm(sourcePath, { force: true });
+  }
+}
+
 export async function createStorage(config) {
   await fs.mkdir(config.stateDir, { recursive: true });
   await fs.mkdir(config.uploadsDir, { recursive: true });
@@ -108,7 +120,7 @@ export async function createStorage(config) {
       const storedName = `${id}-${safeName}`;
       const targetPath = path.join(config.uploadsDir, storedName);
 
-      await fs.rename(sourcePath, targetPath);
+      await moveFile(sourcePath, targetPath);
 
       const file = {
         id,
@@ -167,4 +179,4 @@ export async function createStorage(config) {
   };
 }
 
-export { sanitizeFileName, isExpired };
+export { sanitizeFileName, isExpired, moveFile };

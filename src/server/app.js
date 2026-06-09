@@ -3,6 +3,7 @@ import fsp from "node:fs/promises";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
+import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 function json(res, statusCode, payload) {
@@ -59,6 +60,35 @@ function getMimeType(fileName) {
   return "application/octet-stream";
 }
 
+function decodeHeaderFileName(value) {
+  if (!value) {
+    return "upload.bin";
+  }
+
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+class UploadLimitStream extends Transform {
+  constructor(limitBytes) {
+    super();
+    this.limitBytes = limitBytes;
+    this.receivedBytes = 0;
+  }
+
+  _transform(chunk, encoding, callback) {
+    this.receivedBytes += chunk.length;
+    if (this.receivedBytes > this.limitBytes) {
+      callback(new Error("FILE_TOO_LARGE"));
+      return;
+    }
+    callback(null, chunk);
+  }
+}
+
 export function createApp({ config, storage }) {
   const clients = new Set();
 
@@ -81,29 +111,35 @@ export function createApp({ config, storage }) {
 
   async function handleFileUpload(req, res) {
     const rawFileName = req.headers["x-file-name"];
-    const fileName = Array.isArray(rawFileName) ? rawFileName[0] : rawFileName;
+    const fileName = decodeHeaderFileName(Array.isArray(rawFileName) ? rawFileName[0] : rawFileName);
     const mimeType = req.headers["content-type"] || "application/octet-stream";
+    const maxUploadBytes = config.maxUploadMb * 1024 * 1024;
+    const contentLength = Number.parseInt(req.headers["content-length"] || "0", 10);
+
+    if (Number.isFinite(contentLength) && contentLength > maxUploadBytes) {
+      json(res, 413, { error: `File is larger than ${config.maxUploadMb} MB.` });
+      return;
+    }
+
     const tempPath = path.join(
       os.tmpdir(),
       `clipclip-upload-${Date.now()}-${Math.random().toString(36).slice(2)}`
     );
 
-    let sizeBytes = 0;
     const sink = fs.createWriteStream(tempPath);
+    const limiter = new UploadLimitStream(maxUploadBytes);
 
-    req.on("data", (chunk) => {
-      sizeBytes += chunk.length;
-      if (sizeBytes > config.maxUploadMb * 1024 * 1024) {
-        req.destroy(new Error("FILE_TOO_LARGE"));
-      }
-    });
-
-    await pipeline(req, sink);
+    try {
+      await pipeline(req, limiter, sink);
+    } catch (error) {
+      await fsp.rm(tempPath, { force: true });
+      throw error;
+    }
 
     const file = await storage.saveFile({
       originalName: fileName,
       mimeType,
-      sizeBytes,
+      sizeBytes: limiter.receivedBytes,
       sourcePath: tempPath,
       ttlHours: config.fileTtlHours
     });
