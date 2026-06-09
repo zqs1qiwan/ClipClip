@@ -128,3 +128,20 @@ test("recent files endpoint returns the newest uploads first", async () => {
     });
   }
 });
+
+test("frontend helper modules are served from static routes", async () => {
+  const { server, baseUrl } = await startServer();
+
+  try {
+    const response = await fetch(`${baseUrl}/button-feedback.js`);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "text/javascript; charset=utf-8");
+
+    const body = await response.text();
+    assert.match(body, /flashButtonState/);
+  } finally {
+    await new Promise((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+});

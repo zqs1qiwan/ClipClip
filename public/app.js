@@ -1,4 +1,4 @@
-import { flashButtonState } from "./lib/button-feedback.js";
+import { flashButtonState } from "./button-feedback.js";
 import { copyText } from "./lib/clipboard.js";
 
 const translations = {
@@ -15,6 +15,8 @@ const translations = {
     "paste.created": "Share link is ready.",
     "file.title": "File Transfer",
     "file.select": "Choose a file",
+    "file.dropTitle": "Drop a file here",
+    "file.dropSubtitle": "Or choose from this device",
     "file.selectHint": "Newest 10 files stay in the queue.",
     "file.idle": "Ready.",
     "file.uploading": "Uploading...",
@@ -37,6 +39,7 @@ const translations = {
     "actions.sync": "Sync",
     "actions.createLink": "Create",
     "actions.upload": "Upload",
+    "actions.choose": "Choose",
     "actions.open": "Open",
     "actions.download": "Download",
     "actions.useLive": "Use clipboard text",
@@ -64,6 +67,8 @@ const translations = {
     "paste.created": "\u5206\u4eab\u94fe\u63a5\u5df2\u751f\u6210",
     "file.title": "\u6587\u4ef6\u4e2d\u8f6c",
     "file.select": "\u9009\u62e9\u6587\u4ef6",
+    "file.dropTitle": "\u62d6\u5165\u6587\u4ef6",
+    "file.dropSubtitle": "\u6216\u4ece\u672c\u673a\u9009\u62e9",
     "file.selectHint": "\u961f\u5217\u4f1a\u4fdd\u7559\u6700\u65b0 10 \u4e2a\u6587\u4ef6",
     "file.idle": "\u51c6\u5907\u5c31\u7eea",
     "file.uploading": "\u6b63\u5728\u4e0a\u4f20...",
@@ -86,6 +91,7 @@ const translations = {
     "actions.sync": "\u540c\u6b65",
     "actions.createLink": "\u751f\u6210",
     "actions.upload": "\u4e0a\u4f20",
+    "actions.choose": "\u9009\u62e9",
     "actions.open": "\u6253\u5f00",
     "actions.download": "\u4e0b\u8f7d",
     "actions.useLive": "\u4f7f\u7528\u526a\u8d34\u677f\u5185\u5bb9",
@@ -123,6 +129,7 @@ const pasteCreateButton = document.querySelector("#paste-create-button");
 const pasteResult = document.querySelector("#paste-result");
 const fileInput = document.querySelector("#file-input");
 const fileInputLabel = document.querySelector("#file-input-label");
+const fileBrowseButton = document.querySelector("#file-browse-button");
 const fileSelectionMeta = document.querySelector("#file-selection-meta");
 const fileUploadButton = document.querySelector("#file-upload-button");
 const uploadBox = document.querySelector(".upload-box");
@@ -604,6 +611,10 @@ function bindTabEvents() {
 function bindFileInteractions() {
   fileInput.addEventListener("change", () => {
     setSelectedFile(fileInput.files?.[0] || null);
+  });
+
+  fileBrowseButton.addEventListener("click", () => {
+    fileInput.click();
   });
 
   ["dragenter", "dragover"].forEach((eventName) => {

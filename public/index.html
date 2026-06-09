@@ -83,15 +83,19 @@
         <section class="tool-panel" data-panel="files" hidden>
           <div class="panel-header">
             <h1 class="panel-title" data-i18n="file.title">File Transfer</h1>
-            <button id="file-upload-button" type="button" data-i18n="actions.upload">Upload</button>
           </div>
 
-          <div class="split-layout">
-            <div class="file-box">
+          <div class="split-layout files-layout">
+            <section class="file-box upload-panel">
               <label class="upload-box" for="file-input">
                 <input id="file-input" type="file" />
-                <span id="file-input-label" data-i18n="file.select">Choose a file</span>
+                <span class="upload-title" data-i18n="file.dropTitle">Drop a file here</span>
+                <span class="upload-subtitle" id="file-input-label" data-i18n="file.select">Choose a file</span>
               </label>
+              <div class="upload-actions">
+                <button id="file-browse-button" class="secondary-button" type="button" data-i18n="actions.choose">Choose</button>
+                <button id="file-upload-button" type="button" data-i18n="actions.upload">Upload</button>
+              </div>
               <p class="muted-text selection-meta" id="file-selection-meta" data-i18n="file.selectHint">
                 Newest 10 files stay in the queue.
               </p>
@@ -99,7 +103,7 @@
                 <span id="upload-progress-bar"></span>
               </div>
               <p class="muted-text" id="upload-status" data-i18n="file.idle">Ready.</p>
-            </div>
+            </section>
 
             <aside class="history-box">
               <section class="history-section">

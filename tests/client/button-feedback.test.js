@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { flashButtonState } from "../../public/lib/button-feedback.js";
+import { flashButtonState } from "../../public/button-feedback.js";
 
 test("flashButtonState updates the button label and restores it after timeout", () => {
   const button = {
