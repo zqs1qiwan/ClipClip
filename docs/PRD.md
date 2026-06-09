@@ -101,13 +101,13 @@ The first release should include:
 
 - Docker-first single service.
 - Web UI for live clipboard text.
-- WebSocket or Server-Sent Events real-time updates.
+- Server-Sent Events real-time updates.
 - Immutable paste links.
 - Expiration for paste links.
 - Small file upload and download.
 - Configurable file size limit.
 - Basic local admin settings through environment variables.
-- SQLite or file-backed storage.
+- JSON file-backed storage.
 - Health endpoint for container checks.
 - README with Docker Compose and Cloudflare Tunnel notes.
 
@@ -137,7 +137,7 @@ Expected environment variables:
 
 ```text
 CLIPCLIP_HOST=0.0.0.0
-CLIPCLIP_PORT=8080
+CLIPCLIP_PORT=5678
 CLIPCLIP_DATA_DIR=/data
 CLIPCLIP_MAX_UPLOAD_MB=50
 CLIPCLIP_PASTE_TTL_HOURS=24
@@ -159,20 +159,16 @@ ClipClip should treat all clipboard data as sensitive. It should avoid unnecessa
 
 ## Recommended Tech Stack
 
-Initial recommendation:
+Current MVP implementation:
 
-- TypeScript
 - Node.js runtime
-- Fastify or Hono for HTTP API
-- WebSocket for live clipboard updates
-- SQLite for metadata and paste storage
+- Native HTTP server and filesystem APIs
+- Server-Sent Events for live updates
+- JSON metadata storage
 - Local filesystem for file blobs
-- Vite + React for frontend
-- Vitest for unit tests
-- Playwright for browser tests
-- Docker multi-stage build
-
-This stack is not final until the technical design is approved.
+- Browser-native HTML, CSS, and JavaScript UI
+- Node built-in test runner
+- Single-stage Docker image
 
 ## Commands
 
@@ -183,10 +179,8 @@ Dev: npm run dev
 Build: npm run build
 Test: npm test
 Lint: npm run lint
-Format: npm run format
-E2E: npm run test:e2e
 Docker build: docker build -t clipclip:local .
-Docker run: docker run --rm -p 8080:8080 -v clipclip-data:/data clipclip:local
+Docker run: docker run --rm -p 5678:5678 -v clipclip-data:/data clipclip:local
 ```
 
 ## Project Structure
@@ -195,40 +189,28 @@ Planned structure:
 
 ```text
 docs/                 Product, architecture, threat model, ADRs
-src/server/           HTTP API, WebSocket, storage, cleanup jobs
-src/client/           Browser UI
-src/shared/           Shared types and validation schemas
+src/server/           HTTP API, SSE, storage, cleanup jobs
+public/               Browser UI
 tests/                Unit and integration tests
-e2e/                  Browser tests
-docker/               Docker-related examples if needed
 data/                 Local runtime data, ignored by Git
-uploads/              Local uploaded files, ignored by Git
 ```
 
 ## Code Style
 
-Use explicit names, small modules, and schema validation at boundaries.
+Use explicit names, small modules, and validation at boundaries.
 
 Example style:
 
-```ts
-type PasteRecord = {
-  id: string;
-  content: string;
-  expiresAt: Date | null;
-  burnAfterRead: boolean;
-};
-
-function isExpired(record: Pick<PasteRecord, "expiresAt">, now = new Date()): boolean {
-  return record.expiresAt !== null && record.expiresAt.getTime() <= now.getTime();
+```js
+function isExpired(expiresAt) {
+  return Boolean(expiresAt) && new Date(expiresAt).getTime() <= Date.now();
 }
 ```
 
 Conventions:
 
-- Prefer TypeScript strict mode.
 - Validate every external input.
-- Keep server, client, and shared code clearly separated.
+- Keep server and browser code clearly separated.
 - Avoid logging sensitive content.
 - Keep UI strings short and direct.
 - Use environment variables for deployment settings.
@@ -239,7 +221,7 @@ MVP testing should include:
 
 - Unit tests for TTL, ID generation, filename sanitization, and validation.
 - Integration tests for paste creation, file upload limits, file download, and cleanup.
-- Browser tests for live clipboard sync across two pages.
+- Smoke tests for live clipboard sync and API flows.
 - Docker build verification.
 - Manual mobile-width visual check before release.
 
@@ -254,7 +236,6 @@ npm run build
 Release verification:
 
 ```text
-npm run test:e2e
 docker build -t clipclip:local .
 ```
 

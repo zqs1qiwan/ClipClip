@@ -10,7 +10,7 @@ export function loadConfig(env = process.env) {
 
   return {
     host: env.CLIPCLIP_HOST || "0.0.0.0",
-    port: parsePositiveInt(env.CLIPCLIP_PORT, 8080),
+    port: parsePositiveInt(env.CLIPCLIP_PORT, 5678),
     publicBaseUrl: env.CLIPCLIP_PUBLIC_BASE_URL || "",
     dataDir,
     stateDir: path.join(dataDir, "state"),

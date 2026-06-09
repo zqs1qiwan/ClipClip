@@ -255,7 +255,7 @@ Target host:
 Container exposure:
 
 ```text
-Host port 8080 -> container port 8080
+Host port 5678 -> container port 5678
 Mounted volume -> /data
 ```
 
@@ -284,7 +284,7 @@ Mitigation:
 - Enforce multipart size limits
 - Reject oversized requests early
 
-### Risk: stale WebSocket state after reconnect
+### Risk: stale real-time state after reconnect
 
 Mitigation:
 

@@ -7,72 +7,117 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="page-shell">
-      <header class="hero">
-        <div>
-          <p class="eyebrow">ClipClip MVP</p>
-          <h1>Shared clipboard, paste links, and small file drop.</h1>
-          <p class="hero-copy">
-            Open this page on any device in your network. Text updates live, paste links stay fixed,
-            and small files move without installing apps.
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <div class="brand-row">
+            <strong class="brand-name">ClipClip</strong>
+            <span class="badge" id="connection-badge">Connecting</span>
+          </div>
+          <p class="brand-note" data-i18n="brand.note">
+            Internal clipboard and quick transfer tool for your local network.
           </p>
         </div>
-        <div class="status-card">
-          <span class="status-dot" id="live-status-dot"></span>
-          <span id="live-status-text">Connecting</span>
+
+        <div class="toolbar">
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button class="lang-button is-active" type="button" data-lang="en">EN</button>
+            <button class="lang-button" type="button" data-lang="zh">中</button>
+          </div>
+          <div class="endpoint-box">
+            <span class="endpoint-label" data-i18n="topbar.endpointLabel">Access</span>
+            <code class="endpoint-value" id="endpoint-value">http://192.168.2.1:5678</code>
+          </div>
         </div>
       </header>
 
-      <main class="grid">
-        <section class="panel panel-live">
-          <div class="panel-head">
-            <h2>Live Clipboard</h2>
-            <button id="live-clear-button" class="ghost-button" type="button">Clear</button>
+      <main class="workspace">
+        <section class="panel live-panel">
+          <div class="panel-title-row">
+            <div>
+              <h1 data-i18n="live.title">Live Clipboard</h1>
+              <p class="panel-hint" data-i18n="live.hint">
+                Sync one shared text box across devices on the LAN.
+              </p>
+            </div>
+            <div class="inline-actions">
+              <button id="live-copy-button" class="secondary-button" type="button" data-i18n="actions.copy">Copy</button>
+              <button id="live-clear-button" class="secondary-button" type="button" data-i18n="actions.clear">Clear</button>
+              <button id="live-save-button" type="button" data-i18n="actions.sync">Sync</button>
+            </div>
           </div>
-          <textarea id="live-textarea" placeholder="Paste or type text here"></textarea>
-          <div class="row-actions">
-            <button id="live-save-button" type="button">Sync text</button>
-            <button id="live-copy-button" class="ghost-button" type="button">Copy</button>
+
+          <textarea
+            id="live-textarea"
+            aria-label="Live clipboard"
+            data-i18n-placeholder="live.placeholder"
+            placeholder="Paste or type text here"
+          ></textarea>
+
+          <div class="panel-foot">
+            <span class="muted-text" id="live-updated-at">Waiting for first update.</span>
           </div>
-          <p class="helper" id="live-updated-at">Waiting for first update.</p>
         </section>
 
-        <section class="panel">
-          <div class="panel-head">
-            <h2>Immutable Paste</h2>
-          </div>
-          <textarea id="paste-textarea" placeholder="Create a fixed paste link from this text"></textarea>
-          <div class="row-actions">
-            <button id="paste-create-button" type="button">Create link</button>
-          </div>
-          <div class="result-box" id="paste-result">No paste created yet.</div>
-        </section>
+        <section class="side-stack">
+          <section class="panel">
+            <div class="panel-title-row compact">
+              <div>
+                <h2 data-i18n="paste.title">Fixed Paste Link</h2>
+                <p class="panel-hint" data-i18n="paste.hint">
+                  Create a read-only link from the current text.
+                </p>
+              </div>
+              <button id="paste-create-button" type="button" data-i18n="actions.createLink">Create</button>
+            </div>
 
-        <section class="panel">
-          <div class="panel-head">
-            <h2>Small File Drop</h2>
-          </div>
-          <label class="upload-box" for="file-input">
-            <input id="file-input" type="file" />
-            <span>Select a file to upload</span>
-          </label>
-          <div class="row-actions">
-            <button id="file-upload-button" type="button">Upload file</button>
-          </div>
-          <div class="result-box" id="file-result">No file uploaded yet.</div>
+            <textarea
+              id="paste-textarea"
+              class="compact-textarea"
+              aria-label="Paste source"
+              data-i18n-placeholder="paste.placeholder"
+              placeholder="Create a fixed paste link from this text"
+            ></textarea>
+
+            <div class="result-box" id="paste-result">No paste created yet.</div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title-row compact">
+              <div>
+                <h2 data-i18n="file.title">Small File Drop</h2>
+                <p class="panel-hint" data-i18n="file.hint">
+                  Upload a small file and open it from another device.
+                </p>
+              </div>
+              <button id="file-upload-button" type="button" data-i18n="actions.upload">Upload</button>
+            </div>
+
+            <label class="upload-box" for="file-input">
+              <input id="file-input" type="file" />
+              <span id="file-input-label" data-i18n="file.select">Choose a file</span>
+            </label>
+
+            <div class="result-box" id="file-result">No file uploaded yet.</div>
+          </section>
         </section>
       </main>
     </div>
 
     <template id="paste-view-template">
-      <div class="page-shell paste-shell">
+      <div class="paste-shell">
         <section class="panel paste-panel">
-          <div class="panel-head">
-            <h2>Paste</h2>
-            <button id="paste-view-copy-button" type="button">Copy</button>
+          <div class="panel-title-row compact">
+            <div>
+              <h2 data-i18n="paste.viewTitle">Paste</h2>
+              <p class="panel-hint" data-i18n="paste.viewHint">Read-only content</p>
+            </div>
+            <div class="inline-actions">
+              <button id="paste-view-copy-button" type="button" data-i18n="actions.copy">Copy</button>
+            </div>
           </div>
           <pre id="paste-view-content"></pre>
-          <p class="helper" id="paste-view-meta"></p>
+          <p class="muted-text" id="paste-view-meta"></p>
         </section>
       </div>
     </template>

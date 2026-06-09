@@ -21,13 +21,13 @@ node src/server/index.js
 docker compose up --build -d
 ```
 
-The app listens on port `8080` by default.
+The app listens on port `5678` by default.
 
 ## Environment variables
 
 ```text
 CLIPCLIP_HOST=0.0.0.0
-CLIPCLIP_PORT=8080
+CLIPCLIP_PORT=5678
 CLIPCLIP_DATA_DIR=/data
 CLIPCLIP_MAX_UPLOAD_MB=50
 CLIPCLIP_PASTE_TTL_HOURS=24
@@ -39,3 +39,4 @@ CLIPCLIP_FILE_TTL_HOURS=24
 - MVP is designed for trusted-LAN use first.
 - If you expose it through Cloudflare Tunnel, put access control in front of it.
 - Runtime data is stored under `data/` and should not be committed.
+- A local DNS name such as `clip.clip` can point to the router IP, but DNS alone does not carry port `5678`. Without a reverse proxy, the direct LAN URL is `http://clip.clip:5678`.
