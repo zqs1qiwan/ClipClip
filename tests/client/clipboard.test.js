@@ -18,7 +18,7 @@ test("copyText falls back to execCommand when Clipboard API fails", async () => 
 
   const document = {
     body: {
-      append(node) {
+      appendChild(node) {
         operations.push(["append", node]);
       },
       removeChild(node) {
@@ -35,7 +35,7 @@ test("copyText falls back to execCommand when Clipboard API fails", async () => 
     }
   };
 
-  await copyText("hello", {
+  const mode = await copyText("hello", {
     navigator: {
       clipboard: {
         async writeText() {
@@ -46,6 +46,7 @@ test("copyText falls back to execCommand when Clipboard API fails", async () => 
     document
   });
 
+  assert.equal(mode, "execCommand");
   assert.deepEqual(operations, [
     ["create", "textarea"],
     ["append", textarea],
@@ -55,4 +56,32 @@ test("copyText falls back to execCommand when Clipboard API fails", async () => 
     ["remove", textarea]
   ]);
   assert.equal(textarea.value, "hello");
+});
+
+test("copyText falls back to prompt when programmatic copy is unavailable", async () => {
+  const prompts = [];
+
+  const mode = await copyText("manual", {
+    navigator: {
+      clipboard: {
+        async writeText() {
+          throw new Error("Clipboard blocked");
+        }
+      }
+    },
+    document: {
+      body: {},
+      execCommand() {
+        return false;
+      }
+    },
+    window: {
+      prompt(message, value) {
+        prompts.push([message, value]);
+      }
+    }
+  });
+
+  assert.equal(mode, "prompt");
+  assert.deepEqual(prompts, [["Copy this text", "manual"]]);
 });

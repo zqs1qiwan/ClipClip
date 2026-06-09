@@ -15,7 +15,7 @@
             <span class="badge" id="connection-badge">Connecting</span>
           </div>
           <p class="brand-note" data-i18n="brand.note">
-            Shared clipboard, fixed links, and small file transfer for your local network.
+            Shared clipboard, fixed links, and file transfer for your local network.
           </p>
         </div>
 
@@ -98,9 +98,9 @@
         <section class="tool-panel" data-panel="files" hidden>
           <div class="panel-header">
             <div class="panel-copy">
-              <h1 data-i18n="file.title">Small File Drop</h1>
+              <h1 data-i18n="file.title">File Transfer</h1>
               <p class="panel-hint" data-i18n="file.hint">
-                Send a small file to another device with a simple download link.
+                Upload once, then let other devices download from the shared queue.
               </p>
             </div>
             <button id="file-upload-button" type="button" data-i18n="actions.upload">Upload</button>
@@ -113,7 +113,7 @@
                 <span id="file-input-label" data-i18n="file.select">Choose a file</span>
               </label>
               <p class="muted-text selection-meta" id="file-selection-meta" data-i18n="file.selectHint">
-                Good for quick transfers within the upload size limit.
+                ClipClip keeps the newest 10 files and removes older ones automatically.
               </p>
               <div class="progress-track" aria-hidden="true">
                 <span id="upload-progress-bar"></span>
@@ -121,11 +121,39 @@
               <p class="muted-text" id="upload-status" data-i18n="file.idle">Ready.</p>
             </div>
 
-            <aside class="result-box" id="file-result">No file uploaded yet.</aside>
+            <aside class="history-box">
+              <section class="history-section">
+                <div class="section-head">
+                  <div>
+                    <strong data-i18n="file.latestTitle">Ready to download</strong>
+                    <p class="muted-text" data-i18n="file.latestHint">
+                      The newest file stays pinned here for quick access.
+                    </p>
+                  </div>
+                </div>
+                <div class="result-box align-start" id="file-current">No files in the queue yet.</div>
+              </section>
+
+              <section class="history-section">
+                <div class="section-head">
+                  <div>
+                    <strong data-i18n="file.queueTitle">Recent uploads</strong>
+                    <p class="muted-text" data-i18n="file.queueHint">
+                      The queue keeps up to 10 files and reuses space automatically.
+                    </p>
+                  </div>
+                  <span class="muted-text" id="file-count">0 files</span>
+                </div>
+                <p class="muted-text" id="file-history-empty" data-i18n="file.historyEmpty">Upload history will appear here.</p>
+                <ul class="history-list" id="file-history-list"></ul>
+              </section>
+            </aside>
           </div>
         </section>
       </main>
     </div>
+
+    <div class="app-notice" id="app-notice" hidden aria-live="polite"></div>
 
     <template id="paste-view-template">
       <div class="paste-shell">

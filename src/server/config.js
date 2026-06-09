@@ -17,6 +17,7 @@ export function loadConfig(env = process.env) {
     uploadsDir: path.join(dataDir, "uploads"),
     stateFile: path.join(dataDir, "state", "clipclip-state.json"),
     maxUploadMb: parsePositiveInt(env.CLIPCLIP_MAX_UPLOAD_MB, 50),
+    recentFilesLimit: parsePositiveInt(env.CLIPCLIP_RECENT_FILES_LIMIT, 10),
     pasteTtlHours: parsePositiveInt(env.CLIPCLIP_PASTE_TTL_HOURS, 24),
     fileTtlHours: parsePositiveInt(env.CLIPCLIP_FILE_TTL_HOURS, 24),
     cleanupIntervalMs: parsePositiveInt(env.CLIPCLIP_CLEANUP_INTERVAL_MS, 60000),

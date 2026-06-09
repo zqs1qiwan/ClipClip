@@ -97,3 +97,34 @@ test("latest uploaded file is discoverable for other devices", async () => {
     });
   }
 });
+
+test("recent files endpoint returns the newest uploads first", async () => {
+  const { server, baseUrl } = await startServer();
+
+  try {
+    for (const name of ["one.txt", "two.txt", "three.txt"]) {
+      const uploadResponse = await fetch(`${baseUrl}/api/files`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "X-File-Name": name
+        },
+        body: `body-${name}`
+      });
+      assert.equal(uploadResponse.status, 201);
+    }
+
+    const response = await fetch(`${baseUrl}/api/files/recent`);
+    assert.equal(response.status, 200);
+
+    const payload = await response.json();
+    assert.deepEqual(
+      payload.files.map((file) => file.fileName),
+      ["three.txt", "two.txt", "one.txt"]
+    );
+  } finally {
+    await new Promise((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+});

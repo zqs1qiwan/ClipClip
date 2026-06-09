@@ -82,6 +82,10 @@ function serializeFile(file) {
   };
 }
 
+function serializeFiles(files) {
+  return files.map((file) => serializeFile(file));
+}
+
 class UploadLimitStream extends Transform {
   constructor(limitBytes) {
     super();
@@ -214,10 +218,7 @@ export function createApp({ config, storage }) {
           Connection: "keep-alive"
         });
         res.write(sseMessage({ type: "live:snapshot", ...storage.getLiveClipboard() }));
-        const latestFile = storage.getLatestFile();
-        if (latestFile) {
-          res.write(sseMessage({ type: "file:snapshot", ...serializeFile(latestFile) }));
-        }
+        res.write(sseMessage({ type: "files:snapshot", files: serializeFiles(storage.listRecentFiles()) }));
         clients.add(res);
         req.on("close", () => clients.delete(res));
         return;
@@ -251,7 +252,11 @@ export function createApp({ config, storage }) {
 
       if (req.method === "POST" && url.pathname === "/api/files") {
         const file = await handleFileUpload(req, res);
-        broadcastEvent({ type: "file:updated", ...serializeFile(file) });
+        broadcastEvent({
+          type: "files:updated",
+          latest: serializeFile(file),
+          files: serializeFiles(storage.listRecentFiles())
+        });
         return;
       }
 
@@ -262,6 +267,13 @@ export function createApp({ config, storage }) {
           return;
         }
         json(res, 200, serializeFile(file));
+        return;
+      }
+
+      if (req.method === "GET" && url.pathname === "/api/files/recent") {
+        json(res, 200, {
+          files: serializeFiles(storage.listRecentFiles())
+        });
         return;
       }
 

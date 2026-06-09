@@ -38,6 +38,15 @@ function isExpired(expiresAt) {
   return Boolean(expiresAt) && new Date(expiresAt).getTime() <= Date.now();
 }
 
+async function fileExists(filePath, fileOps = fs) {
+  try {
+    await fileOps.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function moveFile(sourcePath, targetPath, fileOps = fs) {
   try {
     await fileOps.rename(sourcePath, targetPath);
@@ -53,6 +62,7 @@ async function moveFile(sourcePath, targetPath, fileOps = fs) {
 export async function createStorage(config) {
   await fs.mkdir(config.stateDir, { recursive: true });
   await fs.mkdir(config.uploadsDir, { recursive: true });
+  const recentFilesLimit = config.recentFilesLimit || 10;
 
   let state = cloneDefaultState();
 
@@ -79,6 +89,26 @@ export async function createStorage(config) {
       throw error;
     }
     await persist();
+  }
+
+  async function pruneFiles() {
+    const nextFiles = [];
+
+    for (const file of state.files) {
+      const filePath = path.join(config.uploadsDir, file.storedName);
+      if (isExpired(file.expiresAt) || !(await fileExists(filePath))) {
+        await fs.rm(filePath, { force: true });
+        continue;
+      }
+      nextFiles.push(file);
+    }
+
+    const overflow = nextFiles.slice(recentFilesLimit);
+    for (const file of overflow) {
+      await fs.rm(path.join(config.uploadsDir, file.storedName), { force: true });
+    }
+
+    state.files = nextFiles.slice(0, recentFilesLimit);
   }
 
   return {
@@ -134,6 +164,7 @@ export async function createStorage(config) {
       };
 
       state.files.unshift(file);
+      await pruneFiles();
       await persist();
       return {
         ...file,
@@ -151,7 +182,7 @@ export async function createStorage(config) {
       };
     },
     getLatestFile() {
-      const file = state.files.find((entry) => !isExpired(entry.expiresAt));
+      const file = state.files[0];
       if (!file) {
         return null;
       }
@@ -159,6 +190,12 @@ export async function createStorage(config) {
         ...file,
         filePath: path.join(config.uploadsDir, file.storedName)
       };
+    },
+    listRecentFiles(limit = recentFilesLimit) {
+      return state.files.slice(0, limit).map((file) => ({
+        ...file,
+        filePath: path.join(config.uploadsDir, file.storedName)
+      }));
     },
     async markFileDownloaded(id) {
       const file = state.files.find((entry) => entry.id === id);
@@ -169,21 +206,14 @@ export async function createStorage(config) {
       await persist();
     },
     async cleanupExpired() {
-      const expiredFiles = state.files.filter((file) => isExpired(file.expiresAt));
-      for (const file of expiredFiles) {
-        await fs.rm(path.join(config.uploadsDir, file.storedName), {
-          force: true
-        });
-      }
-
       state.pastes = state.pastes.filter((paste) => !isExpired(paste.expiresAt));
-      state.files = state.files.filter((file) => !isExpired(file.expiresAt));
+      await pruneFiles();
       await persist();
     },
     getSummary() {
       return {
         pastes: state.pastes.filter((paste) => !isExpired(paste.expiresAt)).length,
-        files: state.files.filter((file) => !isExpired(file.expiresAt)).length
+        files: state.files.length
       };
     }
   };

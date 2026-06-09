@@ -65,3 +65,62 @@ test("moveFile falls back to copy when rename crosses devices", async () => {
     ["rm", "C:/tmp/source.bin", { force: true }]
   ]);
 });
+
+test("storage keeps only the most recent 10 files and removes older file data", async () => {
+  const config = await makeConfig();
+  const storage = await createStorage(config);
+  const savedIds = [];
+
+  for (let index = 0; index < 12; index += 1) {
+    const sourcePath = path.join(config.stateDir, `source-${index}.txt`);
+    await fs.writeFile(sourcePath, `file-${index}`);
+    const file = await storage.saveFile({
+      originalName: `file-${index}.txt`,
+      mimeType: "text/plain",
+      sizeBytes: 6,
+      sourcePath,
+      ttlHours: 24
+    });
+    savedIds.push(file.id);
+  }
+
+  const recentFiles = storage.listRecentFiles();
+  assert.equal(recentFiles.length, 10);
+  assert.deepEqual(
+    recentFiles.map((file) => file.id),
+    savedIds.slice(-10).reverse()
+  );
+
+  const removedOldest = await fs
+    .access(path.join(config.uploadsDir, `${savedIds[0]}-file-0.txt`))
+    .then(() => false)
+    .catch(() => true);
+  const removedSecondOldest = await fs
+    .access(path.join(config.uploadsDir, `${savedIds[1]}-file-1.txt`))
+    .then(() => false)
+    .catch(() => true);
+
+  assert.equal(removedOldest, true);
+  assert.equal(removedSecondOldest, true);
+});
+
+test("cleanup removes entries whose files are already missing on disk", async () => {
+  const config = await makeConfig();
+  const storage = await createStorage(config);
+  const sourcePath = path.join(config.stateDir, "missing-source.txt");
+  await fs.writeFile(sourcePath, "missing");
+
+  const file = await storage.saveFile({
+    originalName: "missing.txt",
+    mimeType: "text/plain",
+    sizeBytes: 7,
+    sourcePath,
+    ttlHours: 24
+  });
+
+  await fs.rm(file.filePath, { force: true });
+  await storage.cleanupExpired();
+
+  assert.equal(storage.getFile(file.id), null);
+  assert.equal(storage.listRecentFiles().length, 0);
+});
