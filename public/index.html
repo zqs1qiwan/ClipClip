@@ -9,14 +9,9 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <div class="brand-block">
-          <div class="brand-row">
-            <strong class="brand-name">ClipClip</strong>
-            <span class="badge" id="connection-badge">Connecting</span>
-          </div>
-          <p class="brand-note" data-i18n="brand.note">
-            Shared clipboard, fixed links, and file transfer for your local network.
-          </p>
+        <div class="brand-row">
+          <strong class="brand-name">ClipClip</strong>
+          <span class="badge" id="connection-badge">Connecting</span>
         </div>
 
         <div class="toolbar">
@@ -25,7 +20,7 @@
             <code class="endpoint-value" id="endpoint-value">http://clip.clip:5678</code>
           </div>
           <div class="lang-switch" role="group" aria-label="Language">
-            <button class="lang-button" type="button" data-lang="zh">中</button>
+            <button class="lang-button" type="button" data-lang="zh">&#20013;</button>
             <button class="lang-button is-active" type="button" data-lang="en">EN</button>
           </div>
         </div>
@@ -40,12 +35,7 @@
       <main class="workspace">
         <section class="tool-panel" data-panel="live">
           <div class="panel-header">
-            <div class="panel-copy">
-              <h1 data-i18n="live.title">Live Clipboard</h1>
-              <p class="panel-hint" data-i18n="live.hint">
-                Everyone on the LAN sees the same text box in real time.
-              </p>
-            </div>
+            <h1 class="panel-title" data-i18n="live.title">Live Clipboard</h1>
             <div class="inline-actions">
               <button id="live-copy-button" class="secondary-button" type="button" data-i18n="actions.copy">Copy</button>
               <button id="live-clear-button" class="secondary-button" type="button" data-i18n="actions.clear">Clear</button>
@@ -67,12 +57,7 @@
 
         <section class="tool-panel" data-panel="paste" hidden>
           <div class="panel-header">
-            <div class="panel-copy">
-              <h1 data-i18n="paste.title">Fixed Share Link</h1>
-              <p class="panel-hint" data-i18n="paste.hint">
-                Freeze a piece of text into a read-only link.
-              </p>
-            </div>
+            <h1 class="panel-title" data-i18n="paste.title">Share Link</h1>
             <div class="inline-actions">
               <button id="paste-fill-live-button" class="secondary-button" type="button" data-i18n="actions.useLive">
                 Use clipboard text
@@ -97,12 +82,7 @@
 
         <section class="tool-panel" data-panel="files" hidden>
           <div class="panel-header">
-            <div class="panel-copy">
-              <h1 data-i18n="file.title">File Transfer</h1>
-              <p class="panel-hint" data-i18n="file.hint">
-                Upload once, then let other devices download from the shared queue.
-              </p>
-            </div>
+            <h1 class="panel-title" data-i18n="file.title">File Transfer</h1>
             <button id="file-upload-button" type="button" data-i18n="actions.upload">Upload</button>
           </div>
 
@@ -113,7 +93,7 @@
                 <span id="file-input-label" data-i18n="file.select">Choose a file</span>
               </label>
               <p class="muted-text selection-meta" id="file-selection-meta" data-i18n="file.selectHint">
-                ClipClip keeps the newest 10 files and removes older ones automatically.
+                Newest 10 files stay in the queue.
               </p>
               <div class="progress-track" aria-hidden="true">
                 <span id="upload-progress-bar"></span>
@@ -124,24 +104,14 @@
             <aside class="history-box">
               <section class="history-section">
                 <div class="section-head">
-                  <div>
-                    <strong data-i18n="file.latestTitle">Ready to download</strong>
-                    <p class="muted-text" data-i18n="file.latestHint">
-                      The newest file stays pinned here for quick access.
-                    </p>
-                  </div>
+                  <strong data-i18n="file.latestTitle">Ready to download</strong>
                 </div>
                 <div class="result-box align-start" id="file-current">No files in the queue yet.</div>
               </section>
 
               <section class="history-section">
                 <div class="section-head">
-                  <div>
-                    <strong data-i18n="file.queueTitle">Recent uploads</strong>
-                    <p class="muted-text" data-i18n="file.queueHint">
-                      The queue keeps up to 10 files and reuses space automatically.
-                    </p>
-                  </div>
+                  <strong data-i18n="file.queueTitle">Recent uploads</strong>
                   <span class="muted-text" id="file-count">0 files</span>
                 </div>
                 <p class="muted-text" id="file-history-empty" data-i18n="file.historyEmpty">Upload history will appear here.</p>
@@ -153,16 +123,11 @@
       </main>
     </div>
 
-    <div class="app-notice" id="app-notice" hidden aria-live="polite"></div>
-
     <template id="paste-view-template">
       <div class="paste-shell">
         <section class="tool-panel paste-panel">
           <div class="panel-header">
-            <div class="panel-copy">
-              <h1 data-i18n="paste.viewTitle">Shared Paste</h1>
-              <p class="panel-hint" data-i18n="paste.viewHint">Read-only content</p>
-            </div>
+            <h1 class="panel-title" data-i18n="paste.viewTitle">Shared Paste</h1>
             <button id="paste-view-copy-button" type="button" data-i18n="actions.copy">Copy</button>
           </div>
           <pre id="paste-view-content"></pre>

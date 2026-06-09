@@ -1,32 +1,26 @@
+import { flashButtonState } from "./lib/button-feedback.js";
 import { copyText } from "./lib/clipboard.js";
 
 const translations = {
   en: {
-    "brand.note": "Shared clipboard, fixed links, and file transfer for your local network.",
     "topbar.endpointLabel": "Access",
     "tabs.live": "Clipboard",
     "tabs.paste": "Share Link",
     "tabs.files": "Files",
     "live.title": "Live Clipboard",
-    "live.hint": "Everyone on the LAN sees the same text box in real time.",
     "live.placeholder": "Paste or type text here",
-    "paste.title": "Fixed Share Link",
-    "paste.hint": "Freeze a piece of text into a read-only link.",
+    "paste.title": "Share Link",
     "paste.placeholder": "Text for a fixed share link",
     "paste.viewTitle": "Shared Paste",
-    "paste.viewHint": "Read-only content",
     "paste.created": "Share link is ready.",
     "file.title": "File Transfer",
-    "file.hint": "Upload once, then let other devices download from the shared queue.",
     "file.select": "Choose a file",
-    "file.selectHint": "ClipClip keeps the newest 10 files and removes older ones automatically.",
+    "file.selectHint": "Newest 10 files stay in the queue.",
     "file.idle": "Ready.",
     "file.uploading": "Uploading...",
     "file.uploaded": "Upload complete.",
     "file.latestTitle": "Ready to download",
-    "file.latestHint": "The newest file stays pinned here for quick access.",
     "file.queueTitle": "Recent uploads",
-    "file.queueHint": "The queue keeps up to 10 files and reuses space automatically.",
     "file.empty": "No files in the queue yet.",
     "file.historyEmpty": "Upload history will appear here.",
     "file.selectFirst": "Select a file first.",
@@ -36,6 +30,9 @@ const translations = {
     "file.count": "{count} files",
     "actions.copy": "Copy",
     "actions.copyLink": "Copy link",
+    "actions.copied": "Copied",
+    "actions.manualCopy": "Manual Copy",
+    "actions.blocked": "Blocked",
     "actions.clear": "Clear",
     "actions.sync": "Sync",
     "actions.createLink": "Create",
@@ -52,66 +49,56 @@ const translations = {
     "paste.required": "Paste content is required.",
     "paste.expires": "Expires: {time}",
     "time.never": "Never",
-    "notice.copied": "Copied to clipboard.",
-    "notice.prompt": "A manual copy prompt is open.",
-    "notice.copyFailed": "Copy is unavailable on this device.",
     "error.generic": "Something went wrong."
   },
   zh: {
-    "brand.note": "适合局域网内部使用的共享剪贴板、固定链接和文件中转。",
-    "topbar.endpointLabel": "访问地址",
-    "tabs.live": "剪贴板",
-    "tabs.paste": "分享链接",
-    "tabs.files": "文件",
-    "live.title": "实时剪贴板",
-    "live.hint": "局域网内的设备会实时看到同一个文本框。",
-    "live.placeholder": "在这里粘贴或输入文本",
-    "paste.title": "固定分享链接",
-    "paste.hint": "把一段文本冻结成只读链接，方便转发。",
-    "paste.placeholder": "用于生成固定分享链接的文本",
-    "paste.viewTitle": "分享内容",
-    "paste.viewHint": "只读内容",
-    "paste.created": "分享链接已生成。",
-    "file.title": "文件中转",
-    "file.hint": "上传一次，其他设备就能从共享队列里直接下载。",
-    "file.select": "选择文件",
-    "file.selectHint": "ClipClip 只保留最近 10 个文件，旧文件会自动清理。",
-    "file.idle": "准备就绪。",
-    "file.uploading": "正在上传...",
-    "file.uploaded": "上传完成。",
-    "file.latestTitle": "当前可下载",
-    "file.latestHint": "最新上传的文件会固定显示在这里，方便直接下载。",
-    "file.queueTitle": "最近上传",
-    "file.queueHint": "队列最多保留 10 个文件，并会自动回收空间。",
-    "file.empty": "队列里还没有文件。",
-    "file.historyEmpty": "上传历史会显示在这里。",
-    "file.selectFirst": "请先选择文件。",
-    "file.selected": "已选择：{name}（{size} KB）",
-    "file.kb": "{name}（{size} KB）",
-    "file.latestBadge": "最新",
-    "file.count": "{count} 个文件",
-    "actions.copy": "复制",
-    "actions.copyLink": "复制链接",
-    "actions.clear": "清空",
-    "actions.sync": "同步",
-    "actions.createLink": "生成",
-    "actions.upload": "上传",
-    "actions.open": "打开",
-    "actions.download": "下载",
-    "actions.useLive": "使用剪贴板内容",
-    "status.connecting": "连接中",
-    "status.live": "已连接",
-    "status.reconnecting": "重连中",
-    "live.waiting": "等待首次同步。",
-    "live.updated": "最近同步：{time}",
-    "paste.empty": "还没有生成分享链接。",
-    "paste.required": "请输入要分享的文本。",
-    "paste.expires": "过期时间：{time}",
-    "time.never": "尚未同步",
-    "notice.copied": "已复制到剪贴板。",
-    "notice.prompt": "已打开手动复制提示。",
-    "notice.copyFailed": "当前设备无法直接复制。",
-    "error.generic": "出了点问题。"
+    "topbar.endpointLabel": "\u8bbf\u95ee",
+    "tabs.live": "\u526a\u8d34\u677f",
+    "tabs.paste": "\u5206\u4eab\u94fe\u63a5",
+    "tabs.files": "\u6587\u4ef6",
+    "live.title": "\u5b9e\u65f6\u526a\u8d34\u677f",
+    "live.placeholder": "\u5728\u8fd9\u91cc\u7c98\u8d34\u6216\u8f93\u5165\u6587\u672c",
+    "paste.title": "\u5206\u4eab\u94fe\u63a5",
+    "paste.placeholder": "\u8f93\u5165\u8981\u56fa\u5b9a\u5206\u4eab\u7684\u6587\u672c",
+    "paste.viewTitle": "\u5206\u4eab\u5185\u5bb9",
+    "paste.created": "\u5206\u4eab\u94fe\u63a5\u5df2\u751f\u6210",
+    "file.title": "\u6587\u4ef6\u4e2d\u8f6c",
+    "file.select": "\u9009\u62e9\u6587\u4ef6",
+    "file.selectHint": "\u961f\u5217\u4f1a\u4fdd\u7559\u6700\u65b0 10 \u4e2a\u6587\u4ef6",
+    "file.idle": "\u51c6\u5907\u5c31\u7eea",
+    "file.uploading": "\u6b63\u5728\u4e0a\u4f20...",
+    "file.uploaded": "\u4e0a\u4f20\u5b8c\u6210",
+    "file.latestTitle": "\u5f53\u524d\u53ef\u4e0b\u8f7d",
+    "file.queueTitle": "\u6700\u8fd1\u4e0a\u4f20",
+    "file.empty": "\u961f\u5217\u91cc\u8fd8\u6ca1\u6709\u6587\u4ef6",
+    "file.historyEmpty": "\u4e0a\u4f20\u8bb0\u5f55\u4f1a\u663e\u793a\u5728\u8fd9\u91cc",
+    "file.selectFirst": "\u8bf7\u5148\u9009\u62e9\u6587\u4ef6",
+    "file.selected": "\u5df2\u9009\u62e9\uff1a{name} ({size} KB)",
+    "file.kb": "{name} ({size} KB)",
+    "file.latestBadge": "\u6700\u65b0",
+    "file.count": "{count} \u4e2a\u6587\u4ef6",
+    "actions.copy": "\u590d\u5236",
+    "actions.copyLink": "\u590d\u5236\u94fe\u63a5",
+    "actions.copied": "\u5df2\u590d\u5236",
+    "actions.manualCopy": "\u624b\u52a8\u590d\u5236",
+    "actions.blocked": "\u65e0\u6cd5\u590d\u5236",
+    "actions.clear": "\u6e05\u7a7a",
+    "actions.sync": "\u540c\u6b65",
+    "actions.createLink": "\u751f\u6210",
+    "actions.upload": "\u4e0a\u4f20",
+    "actions.open": "\u6253\u5f00",
+    "actions.download": "\u4e0b\u8f7d",
+    "actions.useLive": "\u4f7f\u7528\u526a\u8d34\u677f\u5185\u5bb9",
+    "status.connecting": "\u8fde\u63a5\u4e2d",
+    "status.live": "\u5df2\u8fde\u63a5",
+    "status.reconnecting": "\u91cd\u8fde\u4e2d",
+    "live.waiting": "\u7b49\u5f85\u9996\u6b21\u540c\u6b65",
+    "live.updated": "\u6700\u8fd1\u540c\u6b65\uff1a{time}",
+    "paste.empty": "\u8fd8\u6ca1\u6709\u5206\u4eab\u94fe\u63a5",
+    "paste.required": "\u8bf7\u5148\u8f93\u5165\u8981\u5206\u4eab\u7684\u6587\u672c",
+    "paste.expires": "\u8fc7\u671f\u65f6\u95f4\uff1a{time}",
+    "time.never": "\u6682\u65e0",
+    "error.generic": "\u51fa\u4e86\u70b9\u95ee\u9898"
   }
 };
 
@@ -120,8 +107,7 @@ const state = {
   language: localStorage.getItem("clipclip-language") || "zh",
   currentPaste: null,
   recentFiles: [],
-  selectedFile: null,
-  noticeTimer: null
+  selectedFile: null
 };
 
 const liveTextarea = document.querySelector("#live-textarea");
@@ -146,7 +132,6 @@ const fileCurrent = document.querySelector("#file-current");
 const fileHistoryList = document.querySelector("#file-history-list");
 const fileHistoryEmpty = document.querySelector("#file-history-empty");
 const fileCount = document.querySelector("#file-count");
-const appNotice = document.querySelector("#app-notice");
 
 function t(key, vars = {}) {
   const dict = translations[state.language] || translations.en;
@@ -163,6 +148,44 @@ function formatTime(value) {
   }
   const locale = state.language === "zh" ? "zh-CN" : "en-US";
   return new Date(value).toLocaleString(locale);
+}
+
+function setButtonIdleLabel(button, label) {
+  button.dataset.idleLabel = label;
+  if (!button.dataset.copyState) {
+    button.textContent = label;
+  }
+}
+
+function applyCopyFeedback(button, mode) {
+  const idleLabel = button.dataset.idleLabel || button.textContent;
+  if (mode === "prompt") {
+    flashButtonState(button, {
+      idleLabel,
+      activeLabel: t("actions.manualCopy"),
+      tone: "warning"
+    });
+    return;
+  }
+
+  flashButtonState(button, {
+    idleLabel,
+    activeLabel: t("actions.copied"),
+    tone: "success"
+  });
+}
+
+async function copyWithButton(button, value) {
+  try {
+    const mode = await copyText(value);
+    applyCopyFeedback(button, mode);
+  } catch {
+    flashButtonState(button, {
+      idleLabel: button.dataset.idleLabel || button.textContent,
+      activeLabel: t("actions.blocked"),
+      tone: "warning"
+    });
+  }
 }
 
 function translateStaticText() {
@@ -202,7 +225,6 @@ function updateLiveTimestamp(updatedAt) {
     liveUpdatedAt.textContent = t("live.waiting");
     return;
   }
-
   liveUpdatedAt.dataset.updatedAt = updatedAt;
   liveUpdatedAt.textContent = t("live.updated", { time: formatTime(updatedAt) });
 }
@@ -211,42 +233,8 @@ function setUploadProgress(value) {
   uploadProgressBar.style.inlineSize = `${Math.max(0, Math.min(100, value))}%`;
 }
 
-function showNotice(message, tone = "neutral") {
-  if (!appNotice) {
-    return;
-  }
-
-  appNotice.hidden = false;
-  appNotice.dataset.tone = tone;
-  appNotice.textContent = message;
-
-  if (state.noticeTimer) {
-    window.clearTimeout(state.noticeTimer);
-  }
-
-  state.noticeTimer = window.setTimeout(() => {
-    appNotice.hidden = true;
-    appNotice.textContent = "";
-    delete appNotice.dataset.tone;
-  }, 1800);
-}
-
-async function copyWithFeedback(value) {
-  try {
-    const mode = await copyText(value);
-    if (mode === "prompt") {
-      showNotice(t("notice.prompt"), "warning");
-      return;
-    }
-    showNotice(t("notice.copied"), "success");
-  } catch {
-    showNotice(t("notice.copyFailed"), "warning");
-  }
-}
-
 function setSelectedFile(file) {
   state.selectedFile = file || null;
-
   if (!file) {
     fileInputLabel.textContent = t("file.select");
     fileSelectionMeta.textContent = t("file.selectHint");
@@ -264,7 +252,27 @@ function setSelectedFile(file) {
   setUploadProgress(0);
 }
 
-function createResultCard({ title, subtitle, href, expiresAt, primaryActionLabel = t("actions.open"), badgeText = "" }) {
+function createCopyButton(
+  label,
+  onCopy,
+  className = "secondary-button small-button copy-feedback-button"
+) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = className;
+  setButtonIdleLabel(button, label);
+  button.addEventListener("click", () => onCopy(button));
+  return button;
+}
+
+function createResultCard({
+  title,
+  subtitle,
+  href,
+  expiresAt,
+  primaryActionLabel = t("actions.open"),
+  badgeText = ""
+}) {
   const card = document.createElement("div");
   card.className = "result-card";
 
@@ -274,7 +282,6 @@ function createResultCard({ title, subtitle, href, expiresAt, primaryActionLabel
   const titleNode = document.createElement("strong");
   titleNode.className = "result-title";
   titleNode.textContent = title;
-
   headerRow.append(titleNode);
 
   if (badgeText) {
@@ -301,11 +308,9 @@ function createResultCard({ title, subtitle, href, expiresAt, primaryActionLabel
   openButton.rel = "noreferrer";
   openButton.textContent = primaryActionLabel;
 
-  const copyButton = document.createElement("button");
-  copyButton.type = "button";
-  copyButton.className = "secondary-button small-button";
-  copyButton.textContent = t("actions.copyLink");
-  copyButton.addEventListener("click", () => copyWithFeedback(href));
+  const copyButton = createCopyButton(t("actions.copyLink"), (button) =>
+    copyWithButton(button, href)
+  );
 
   const expiresNode = document.createElement("span");
   expiresNode.className = "muted-text";
@@ -317,7 +322,7 @@ function createResultCard({ title, subtitle, href, expiresAt, primaryActionLabel
   return card;
 }
 
-function createFileHistoryItem(file, isLatest = false) {
+function createFileHistoryItem(file) {
   const item = document.createElement("li");
   item.className = "history-item";
 
@@ -333,16 +338,9 @@ function createFileHistoryItem(file, isLatest = false) {
   details.textContent = `${t("file.kb", {
     name: file.fileName,
     size: String(Math.max(1, Math.round(file.sizeBytes / 1024)))
-  })} · ${formatTime(file.expiresAt)}`;
+  })} - ${formatTime(file.expiresAt)}`;
 
   meta.append(title, details);
-
-  if (isLatest) {
-    const latestBadge = document.createElement("span");
-    latestBadge.className = "mini-badge";
-    latestBadge.textContent = t("file.latestBadge");
-    meta.append(latestBadge);
-  }
 
   const actions = document.createElement("div");
   actions.className = "history-actions";
@@ -354,13 +352,13 @@ function createFileHistoryItem(file, isLatest = false) {
   downloadLink.rel = "noreferrer";
   downloadLink.textContent = t("actions.download");
 
-  const copyLinkButton = document.createElement("button");
-  copyLinkButton.type = "button";
-  copyLinkButton.className = "ghost-button";
-  copyLinkButton.textContent = t("actions.copyLink");
-  copyLinkButton.addEventListener("click", () => copyWithFeedback(`${window.location.origin}${file.downloadUrl}`));
+  const copyButton = createCopyButton(
+    t("actions.copyLink"),
+    (button) => copyWithButton(button, `${window.location.origin}${file.downloadUrl}`),
+    "ghost-button copy-feedback-button"
+  );
 
-  actions.append(downloadLink, copyLinkButton);
+  actions.append(downloadLink, copyButton);
   item.append(meta, actions);
   return item;
 }
@@ -382,7 +380,6 @@ function renderPasteResult(paste) {
 
 function renderFiles(files) {
   state.recentFiles = Array.isArray(files) ? files : [];
-
   fileCurrent.innerHTML = "";
   fileHistoryList.innerHTML = "";
 
@@ -420,6 +417,7 @@ function applyLanguage() {
   translateStaticText();
   endpointValue.textContent = window.location.origin;
   setConnectionState(connectionBadge.dataset.state || "connecting");
+  setButtonIdleLabel(liveCopyButton, t("actions.copy"));
 
   if (liveUpdatedAt.dataset.updatedAt) {
     updateLiveTimestamp(liveUpdatedAt.dataset.updatedAt);
@@ -450,11 +448,9 @@ async function api(path, options = {}) {
 
   const isJson = response.headers.get("content-type")?.includes("application/json");
   const payload = isJson ? await response.json() : null;
-
   if (!response.ok) {
     throw new Error(payload?.error || t("error.generic"));
   }
-
   return payload;
 }
 
@@ -489,7 +485,6 @@ function bindLiveEvents() {
       updateLiveTimestamp(payload.updatedAt);
       return;
     }
-
     if (payload.type === "files:snapshot" || payload.type === "files:updated") {
       renderFiles(payload.files || []);
     }
@@ -536,7 +531,6 @@ function uploadFileWithProgress(file) {
         resolve(payload);
         return;
       }
-
       reject(new Error(payload.error || t("error.generic")));
     });
 
@@ -548,7 +542,7 @@ function uploadFileWithProgress(file) {
 async function uploadFile() {
   const file = state.selectedFile || fileInput.files?.[0];
   if (!file) {
-    showNotice(t("file.selectFirst"), "warning");
+    uploadStatus.textContent = t("file.selectFirst");
     return;
   }
 
@@ -561,11 +555,9 @@ async function uploadFile() {
     uploadStatus.textContent = t("file.uploaded");
     setUploadProgress(100);
     await loadRecentFiles();
-    showNotice(t("file.uploaded"), "success");
   } catch (error) {
     uploadStatus.textContent = error.message || t("error.generic");
     setUploadProgress(0);
-    showNotice(error.message || t("error.generic"), "warning");
   } finally {
     fileUploadButton.disabled = false;
   }
@@ -585,9 +577,12 @@ async function loadPasteView(pasteId) {
   document.querySelector("#paste-view-meta").textContent = t("paste.expires", {
     time: formatTime(payload.expiresAt)
   });
-  document.querySelector("#paste-view-copy-button").addEventListener("click", async () => {
-    await copyWithFeedback(payload.content);
-  });
+  const pasteViewCopyButton = document.querySelector("#paste-view-copy-button");
+  setButtonIdleLabel(pasteViewCopyButton, t("actions.copy"));
+  pasteViewCopyButton.classList.add("copy-feedback-button");
+  pasteViewCopyButton.addEventListener("click", () =>
+    copyWithButton(pasteViewCopyButton, payload.content)
+  );
 }
 
 function bindLanguageEvents() {
@@ -654,7 +649,8 @@ async function boot() {
   bindFileInteractions();
 
   liveSaveButton.addEventListener("click", () => saveLiveClipboard(liveTextarea.value));
-  liveCopyButton.addEventListener("click", () => copyWithFeedback(liveTextarea.value));
+  liveCopyButton.classList.add("copy-feedback-button");
+  liveCopyButton.addEventListener("click", () => copyWithButton(liveCopyButton, liveTextarea.value));
   liveClearButton.addEventListener("click", () => saveLiveClipboard(""));
   pasteFillLiveButton.addEventListener("click", () => {
     pasteTextarea.value = liveTextarea.value;
