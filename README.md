@@ -39,4 +39,6 @@ CLIPCLIP_FILE_TTL_HOURS=24
 - MVP is designed for trusted-LAN use first.
 - If you expose it through Cloudflare Tunnel, put access control in front of it.
 - Runtime data is stored under `data/` and should not be committed.
+- Advanced access setup is intentionally manual in MVP. Reverse proxy, router DNS, and no-port access should be chosen by the operator based on the host environment.
 - A local DNS name such as `clip.clip` can point to the router IP, but DNS alone does not carry port `5678`. Without a reverse proxy, the direct LAN URL is `http://clip.clip:5678`.
+- Product interaction notes live in `docs/PRODUCT-INSIGHTS.md` and can later be expanded into GitHub Wiki usage guides.

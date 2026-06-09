@@ -26,7 +26,7 @@
           </div>
           <div class="endpoint-box">
             <span class="endpoint-label" data-i18n="topbar.endpointLabel">Access</span>
-            <code class="endpoint-value" id="endpoint-value">http://192.168.2.1:5678</code>
+            <code class="endpoint-value" id="endpoint-value">http://clip.clip:5678</code>
           </div>
         </div>
       </header>
@@ -68,7 +68,12 @@
                   Create a read-only link from the current text.
                 </p>
               </div>
-              <button id="paste-create-button" type="button" data-i18n="actions.createLink">Create</button>
+              <div class="inline-actions">
+                <button id="paste-fill-live-button" class="secondary-button" type="button" data-i18n="actions.useLive">
+                  Use live
+                </button>
+                <button id="paste-create-button" type="button" data-i18n="actions.createLink">Create</button>
+              </div>
             </div>
 
             <textarea
@@ -97,6 +102,9 @@
               <input id="file-input" type="file" />
               <span id="file-input-label" data-i18n="file.select">Choose a file</span>
             </label>
+            <p class="muted-text selection-meta" id="file-selection-meta" data-i18n="file.selectHint">
+              Files up to the configured limit can be shared.
+            </p>
 
             <div class="result-box" id="file-result">No file uploaded yet.</div>
           </section>

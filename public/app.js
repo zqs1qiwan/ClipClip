@@ -10,14 +10,19 @@ const translations = {
     "paste.placeholder": "Text for a fixed paste link",
     "paste.viewTitle": "Paste",
     "paste.viewHint": "Read-only content",
+    "paste.created": "Paste link is ready.",
     "file.title": "Small File Drop",
     "file.hint": "Upload a small file and open it from another device.",
     "file.select": "Choose a file",
+    "file.selectHint": "Files up to the configured limit can be shared.",
     "actions.copy": "Copy",
+    "actions.copyLink": "Copy link",
     "actions.clear": "Clear",
     "actions.sync": "Sync",
     "actions.createLink": "Create",
     "actions.upload": "Upload",
+    "actions.open": "Open",
+    "actions.useLive": "Use live",
     "status.connecting": "Connecting",
     "status.live": "Live",
     "status.reconnecting": "Reconnecting",
@@ -27,6 +32,7 @@ const translations = {
     "paste.required": "Paste content is required.",
     "file.empty": "No file uploaded yet.",
     "file.selectFirst": "Select a file first.",
+    "file.selected": "Selected: {name} ({size} KB)",
     "file.kb": "{name} ({size} KB)",
     "paste.expires": "Expires: {time}",
     "error.generic": "Something went wrong."
@@ -42,14 +48,19 @@ const translations = {
     "paste.placeholder": "用于生成固定链接的文本",
     "paste.viewTitle": "分享内容",
     "paste.viewHint": "只读内容",
+    "paste.created": "分享链接已生成。",
     "file.title": "小文件中转",
     "file.hint": "上传一个小文件，再到另一台设备打开。",
     "file.select": "选择文件",
+    "file.selectHint": "可分享不超过配置上限的小文件。",
     "actions.copy": "复制",
+    "actions.copyLink": "复制链接",
     "actions.clear": "清空",
     "actions.sync": "同步",
     "actions.createLink": "生成",
     "actions.upload": "上传",
+    "actions.open": "打开",
+    "actions.useLive": "使用实时文本",
     "status.connecting": "连接中",
     "status.live": "已连接",
     "status.reconnecting": "重连中",
@@ -59,6 +70,7 @@ const translations = {
     "paste.required": "请输入要分享的文本。",
     "file.empty": "还没有上传文件。",
     "file.selectFirst": "请先选择文件。",
+    "file.selected": "已选择：{name}（{size} KB）",
     "file.kb": "{name}（{size} KB）",
     "paste.expires": "过期时间：{time}",
     "error.generic": "出现了一点问题。"
@@ -78,12 +90,15 @@ const liveUpdatedAt = document.querySelector("#live-updated-at");
 const connectionBadge = document.querySelector("#connection-badge");
 const endpointValue = document.querySelector("#endpoint-value");
 const pasteTextarea = document.querySelector("#paste-textarea");
+const pasteFillLiveButton = document.querySelector("#paste-fill-live-button");
 const pasteCreateButton = document.querySelector("#paste-create-button");
 const pasteResult = document.querySelector("#paste-result");
 const fileInput = document.querySelector("#file-input");
 const fileInputLabel = document.querySelector("#file-input-label");
+const fileSelectionMeta = document.querySelector("#file-selection-meta");
 const fileUploadButton = document.querySelector("#file-upload-button");
 const fileResult = document.querySelector("#file-result");
+const uploadBox = document.querySelector(".upload-box");
 
 function t(key, vars = {}) {
   const dict = translations[state.language] || translations.en;
@@ -101,38 +116,143 @@ function formatTime(value) {
   return new Date(value).toLocaleString(locale);
 }
 
-function applyLanguage() {
-  document.documentElement.lang = state.language === "zh" ? "zh-CN" : "en";
-  document.querySelectorAll("[data-i18n]").forEach((element) => {
-    element.textContent = t(element.dataset.i18n);
-  });
-  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
-    element.placeholder = t(element.dataset.i18nPlaceholder);
-  });
-  document.querySelectorAll(".lang-button").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.lang === state.language);
-  });
-  endpointValue.textContent = `${window.location.origin}`;
-  if (fileInput.files?.[0]) {
-    fileInputLabel.textContent = fileInput.files[0].name;
-  }
-  if (state.currentPaste) {
-    pasteResult.innerHTML = "";
-    pasteResult.append(state.currentPaste);
-  } else if (!pasteResult.querySelector("a")) {
-    pasteResult.textContent = t("paste.empty");
-  }
-  if (!fileResult.querySelector("a")) {
-    fileResult.textContent = t("file.empty");
-  }
-  if (!liveUpdatedAt.dataset.updatedAt) {
-    liveUpdatedAt.textContent = t("live.waiting");
-  }
-}
-
 function setConnectionState(mode) {
   connectionBadge.dataset.state = mode;
   connectionBadge.textContent = t(`status.${mode}`);
+}
+
+function updateLiveTimestamp(updatedAt) {
+  if (!updatedAt) {
+    delete liveUpdatedAt.dataset.updatedAt;
+    liveUpdatedAt.textContent = t("live.waiting");
+    return;
+  }
+  liveUpdatedAt.dataset.updatedAt = updatedAt;
+  liveUpdatedAt.textContent = t("live.updated", { time: formatTime(updatedAt) });
+}
+
+function updateFileSelectionMeta(file) {
+  if (!file) {
+    fileSelectionMeta.textContent = t("file.selectHint");
+    fileInputLabel.textContent = t("file.select");
+    return;
+  }
+  fileInputLabel.textContent = file.name;
+  fileSelectionMeta.textContent = t("file.selected", {
+    name: file.name,
+    size: String(Math.max(1, Math.round(file.size / 1024)))
+  });
+}
+
+async function copyText(value) {
+  await navigator.clipboard.writeText(value);
+}
+
+function createResultCard({ title, subtitle, href, expiresAt }) {
+  const card = document.createElement("div");
+  card.className = "result-card";
+
+  const titleNode = document.createElement("strong");
+  titleNode.className = "result-title";
+  titleNode.textContent = title;
+
+  const subtitleNode = document.createElement("div");
+  subtitleNode.className = "result-link";
+  subtitleNode.textContent = subtitle;
+
+  const actions = document.createElement("div");
+  actions.className = "result-actions";
+
+  const actionPair = document.createElement("div");
+  actionPair.className = "result-action-pair";
+
+  const openButton = document.createElement("a");
+  openButton.className = "link-button";
+  openButton.href = href;
+  openButton.target = "_blank";
+  openButton.rel = "noreferrer";
+  openButton.textContent = t("actions.open");
+
+  const copyButton = document.createElement("button");
+  copyButton.type = "button";
+  copyButton.className = "secondary-button small-button";
+  copyButton.textContent = t("actions.copyLink");
+  copyButton.addEventListener("click", () => copyText(href));
+
+  const expiresNode = document.createElement("span");
+  expiresNode.className = "muted-text";
+  expiresNode.textContent = t("paste.expires", { time: formatTime(expiresAt) });
+
+  actionPair.append(openButton, copyButton);
+  actions.append(actionPair, expiresNode);
+  card.append(titleNode, subtitleNode, actions);
+  return card;
+}
+
+function renderPasteResult(paste) {
+  state.currentPaste = paste;
+  const href = `${window.location.origin}${paste.url}`;
+  pasteResult.innerHTML = "";
+  pasteResult.append(
+    createResultCard({
+      title: t("paste.created"),
+      subtitle: href,
+      href,
+      expiresAt: paste.expiresAt
+    })
+  );
+}
+
+function renderFileResult(file) {
+  const href = `${window.location.origin}${file.downloadUrl}`;
+  fileResult.innerHTML = "";
+  fileResult.append(
+    createResultCard({
+      title: file.fileName,
+      subtitle: t("file.kb", {
+        name: file.fileName,
+        size: String(Math.max(1, Math.round(file.sizeBytes / 1024)))
+      }),
+      href,
+      expiresAt: file.expiresAt
+    })
+  );
+}
+
+function applyLanguage() {
+  document.documentElement.lang = state.language === "zh" ? "zh-CN" : "en";
+
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.placeholder = t(element.dataset.i18nPlaceholder);
+  });
+
+  document.querySelectorAll(".lang-button").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.lang === state.language);
+  });
+
+  endpointValue.textContent = window.location.origin;
+
+  if (liveUpdatedAt.dataset.updatedAt) {
+    updateLiveTimestamp(liveUpdatedAt.dataset.updatedAt);
+  } else {
+    liveUpdatedAt.textContent = t("live.waiting");
+  }
+
+  updateFileSelectionMeta(fileInput.files?.[0] || null);
+
+  if (state.currentPaste) {
+    renderPasteResult(state.currentPaste);
+  } else if (!pasteResult.querySelector(".result-card")) {
+    pasteResult.textContent = t("paste.empty");
+  }
+
+  if (!fileResult.querySelector(".result-card")) {
+    fileResult.textContent = t("file.empty");
+  }
 }
 
 async function api(path, options = {}) {
@@ -152,16 +272,6 @@ async function api(path, options = {}) {
     throw new Error(payload?.error || t("error.generic"));
   }
   return payload;
-}
-
-function updateLiveTimestamp(updatedAt) {
-  if (!updatedAt) {
-    delete liveUpdatedAt.dataset.updatedAt;
-    liveUpdatedAt.textContent = t("live.waiting");
-    return;
-  }
-  liveUpdatedAt.dataset.updatedAt = updatedAt;
-  liveUpdatedAt.textContent = t("live.updated", { time: formatTime(updatedAt) });
 }
 
 async function loadLiveClipboard() {
@@ -202,14 +312,7 @@ async function createPaste() {
     method: "POST",
     body: JSON.stringify({ content })
   });
-  const link = document.createElement("a");
-  link.href = `${window.location.origin}${payload.url}`;
-  link.textContent = link.href;
-  link.target = "_blank";
-  link.rel = "noreferrer";
-  state.currentPaste = link;
-  pasteResult.innerHTML = "";
-  pasteResult.append(link);
+  renderPasteResult(payload);
 }
 
 async function uploadFile() {
@@ -233,14 +336,7 @@ async function uploadFile() {
     throw new Error(payload.error || t("error.generic"));
   }
 
-  const anchor = document.createElement("a");
-  anchor.href = `${window.location.origin}${payload.downloadUrl}`;
-  anchor.textContent = t("file.kb", {
-    name: payload.fileName,
-    size: String(Math.max(1, Math.round(payload.sizeBytes / 1024)))
-  });
-  fileResult.innerHTML = "";
-  fileResult.append(anchor);
+  renderFileResult(payload);
 }
 
 async function loadPasteView(pasteId) {
@@ -254,7 +350,7 @@ async function loadPasteView(pasteId) {
     time: formatTime(payload.expiresAt)
   });
   document.querySelector("#paste-view-copy-button").addEventListener("click", async () => {
-    await navigator.clipboard.writeText(payload.content);
+    await copyText(payload.content);
   });
   applyLanguage();
 }
@@ -265,10 +361,36 @@ function bindLanguageEvents() {
       state.language = button.dataset.lang;
       localStorage.setItem("clipclip-language", state.language);
       applyLanguage();
-      if (liveUpdatedAt.dataset.updatedAt) {
-        updateLiveTimestamp(liveUpdatedAt.dataset.updatedAt);
-      }
     });
+  });
+}
+
+function bindFileInteractions() {
+  fileInput.addEventListener("change", () => {
+    updateFileSelectionMeta(fileInput.files?.[0] || null);
+  });
+
+  ["dragenter", "dragover"].forEach((eventName) => {
+    uploadBox.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      uploadBox.classList.add("is-dragging");
+    });
+  });
+
+  ["dragleave", "drop"].forEach((eventName) => {
+    uploadBox.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      uploadBox.classList.remove("is-dragging");
+    });
+  });
+
+  uploadBox.addEventListener("drop", (event) => {
+    const files = event.dataTransfer?.files;
+    if (!files?.length) {
+      return;
+    }
+    fileInput.files = files;
+    updateFileSelectionMeta(files[0]);
   });
 }
 
@@ -285,16 +407,16 @@ async function boot() {
   applyLanguage();
   await loadLiveClipboard();
   bindLiveEvents();
-
-  fileInput.addEventListener("change", () => {
-    fileInputLabel.textContent = fileInput.files?.[0]?.name || t("file.select");
-  });
+  bindFileInteractions();
 
   liveSaveButton.addEventListener("click", () => saveLiveClipboard(liveTextarea.value));
   liveCopyButton.addEventListener("click", async () => {
-    await navigator.clipboard.writeText(liveTextarea.value);
+    await copyText(liveTextarea.value);
   });
   liveClearButton.addEventListener("click", () => saveLiveClipboard(""));
+  pasteFillLiveButton.addEventListener("click", () => {
+    pasteTextarea.value = liveTextarea.value;
+  });
   pasteCreateButton.addEventListener("click", createPaste);
   fileUploadButton.addEventListener("click", uploadFile);
 }
