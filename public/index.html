@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClipClip</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">ClipClip MVP</p>
+          <h1>Shared clipboard, paste links, and small file drop.</h1>
+          <p class="hero-copy">
+            Open this page on any device in your network. Text updates live, paste links stay fixed,
+            and small files move without installing apps.
+          </p>
+        </div>
+        <div class="status-card">
+          <span class="status-dot" id="live-status-dot"></span>
+          <span id="live-status-text">Connecting</span>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel panel-live">
+          <div class="panel-head">
+            <h2>Live Clipboard</h2>
+            <button id="live-clear-button" class="ghost-button" type="button">Clear</button>
+          </div>
+          <textarea id="live-textarea" placeholder="Paste or type text here"></textarea>
+          <div class="row-actions">
+            <button id="live-save-button" type="button">Sync text</button>
+            <button id="live-copy-button" class="ghost-button" type="button">Copy</button>
+          </div>
+          <p class="helper" id="live-updated-at">Waiting for first update.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Immutable Paste</h2>
+          </div>
+          <textarea id="paste-textarea" placeholder="Create a fixed paste link from this text"></textarea>
+          <div class="row-actions">
+            <button id="paste-create-button" type="button">Create link</button>
+          </div>
+          <div class="result-box" id="paste-result">No paste created yet.</div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Small File Drop</h2>
+          </div>
+          <label class="upload-box" for="file-input">
+            <input id="file-input" type="file" />
+            <span>Select a file to upload</span>
+          </label>
+          <div class="row-actions">
+            <button id="file-upload-button" type="button">Upload file</button>
+          </div>
+          <div class="result-box" id="file-result">No file uploaded yet.</div>
+        </section>
+      </main>
+    </div>
+
+    <template id="paste-view-template">
+      <div class="page-shell paste-shell">
+        <section class="panel paste-panel">
+          <div class="panel-head">
+            <h2>Paste</h2>
+            <button id="paste-view-copy-button" type="button">Copy</button>
+          </div>
+          <pre id="paste-view-content"></pre>
+          <p class="helper" id="paste-view-meta"></p>
+        </section>
+      </div>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
