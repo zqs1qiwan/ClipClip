@@ -4,77 +4,84 @@
 
 # ClipClip
 
-**中文** — 自托管的网页剪贴板：一台设备的文字与文件，其他设备即时可用。无需安装客户端，一个浏览器即可。
-**English** — A self-hosted web clipboard: text and small files on one device, instantly available on others. No client app, just a browser.
+[English](README.en.md) · 简体中文
 
-`本地优先 · 零依赖 · Docker 一键部署` · `LOCAL-FIRST · ZERO-DEPENDENCY · ONE-CONTAINER`
+一个自托管的网页剪贴板：文字实时同步、不可变分享链接、小文件中转。无需安装客户端，浏览器打开即用。
 
-| ![Desktop](docs/screenshots/desktop-light.png) | ![Mobile](docs/screenshots/mobile-light.png) |
+`本地优先 · 零依赖 · 单容器`
+
+| ![桌面版](docs/screenshots/desktop-light.png) | ![手机版](docs/screenshots/mobile-light.png) |
 | --- | --- |
 
 ---
 
-## 它是什么 / What it does
+## 功能
 
-- **实时剪贴板 / Live clipboard** — 多设备打开同一页面，文字实时同步。/ One page on all your devices; text syncs live.
-- **分享链接 / Share links** — 生成不可变文本链接，可设过期、阅后即焚、访问口令。/ Immutable paste links with expiry, burn-after-read and optional passphrase.
-- **文件中转 / File drop** — 上传小文件，另一台设备下载；支持 `curl` 一行命令上传。/ Upload a small file, download it elsewhere; one-line `curl` upload supported.
-- **两种模式 / Two modes** — 局域网零配置直接使用；公网访问时强制口令鉴权。/ Zero-setup on a trusted LAN; token auth required when exposed publicly.
+- **实时剪贴板** — 多设备打开同一页面，文字实时同步，输入自动保存。
+- **分享链接** — 生成不可变文本链接，可设有效期、阅后即焚、访问口令。
+- **文件中转** — 上传小文件，另一台设备下载；支持 `curl` 一行命令上传。
+- **扫码配对** — 点顶部「扫码」，手机相机扫一下即打开。
+- **两种模式** — 局域网零配置直接用；公网访问需口令鉴权。
 
-## 快速开始 / Quick start
-
-**Docker（推荐）/ Docker (recommended)**
+## 快速开始（Docker，推荐）
 
 ```bash
 mkdir -p /srv/clipclip/data && chown -R 1000:1000 /srv/clipclip/data
 docker run -d --name clipclip --restart unless-stopped \
   -p 5678:5678 -v /srv/clipclip/data:/data \
-  zqs1qiwan/clipclip:0.1.0
+  zqs1qiwan/clipclip:latest
 ```
 
-访问 / Open `http://<设备IP>:5678`。标签 / Tags: `:0.1.0`（固定版本）/ `:latest`（最新）。Docker Hub: [zqs1qiwan/clipclip](https://hub.docker.com/r/zqs1qiwan/clipclip)。
+打开 `http://<设备IP>:5678`。镜像：[Docker Hub zqs1qiwan/clipclip](https://hub.docker.com/r/zqs1qiwan/clipclip)，标签 `:latest`（最新）/ `:0.1.0`（固定版本）。
 
-**本机运行 / Run locally** — 需要 Node.js 22+:
+**本机运行**（Node.js 22+）：`npm start` → `http://localhost:5678`。
+**Docker Compose**：下载 [docker-compose.yml](docker-compose.yml)，`docker compose up -d`；配置见 [.env.example](.env.example)。
 
-```bash
-npm start          # http://localhost:5678
-```
+## 关于数据卷 / `-v`
 
-**Docker Compose** — 见 [docker-compose.yml](docker-compose.yml)（含健康检查、安全加固、持久化）；配置示例见 [.env.example](.env.example)。/ See [docker-compose.yml](docker-compose.yml) (healthcheck, hardening, persistence) and [.env.example](.env.example).
+`-v /srv/clipclip/data:/data` 把容器内 `/data` 映射到宿主机目录，**强烈建议保留**：
 
-## 两种模式 / Two modes
+- 容器删除或升级后，剪贴板内容、分享链接、上传文件都还在（持久化）。
+- `/data` 内含 `state/clipclip-state.json`（元数据）与 `uploads/`（文件本体）。
+- 容器以非 root 用户（uid 1000）运行，绑定挂载目录需先 `chown -R 1000:1000`。
+- 备份只需打包 `/srv/clipclip/data`。**不挂载也能跑**，但数据会随容器销毁而丢失。
+- 也可改用命名卷 `-v clipclip-data:/data`（Docker 自动管理，无需 chown）。
 
-| | 本地模式 / Local | 公网模式 / Public |
+## 容量与保留策略
+
+| 项目 | 默认值 | 环境变量 |
 | --- | --- | --- |
-| 开启方式 / Enable | 默认（不设 token）/ Default (no token) | 设置 `CLIPCLIP_ACCESS_TOKEN` |
-| 登录 / Login | 无，打开即用 / None | 需输入访问口令 / Token required |
-| 适用场景 / Use | 可信局域网 / Trusted LAN | 公网 / Internet |
-| 建议 / Advice | 仅在可信网络使用 / Trusted networks only | 前置 Cloudflare Access 或反代鉴权 / Put behind Cloudflare Access or an auth proxy |
+| 单个文件最大 | 50 MB | `CLIPCLIP_MAX_UPLOAD_MB` |
+| 剪贴板文字上限 | 100000 字节 | `CLIPCLIP_LIVE_CONTENT_LIMIT` |
+| 粘贴正文上限 | 524288 字节 | `CLIPCLIP_PASTE_CONTENT_LIMIT` |
+| 分享链接有效期 | 24 小时 | `CLIPCLIP_PASTE_TTL_HOURS` |
+| 文件有效期 | 24 小时 | `CLIPCLIP_FILE_TTL_HOURS` |
+| 粘贴有效期上限 | 168 小时（7天） | `CLIPCLIP_PASTE_TTL_MAX_HOURS` |
+| 保留最近文件数 | 10 | `CLIPCLIP_RECENT_FILES_LIMIT` |
 
-公网暴露前请阅读 / Before exposing publicly, read [docs/SECURITY.md](docs/SECURITY.md)。
+过期的粘贴和文件会自动清理。
 
-## 使用 / Usage
+## 两种模式
 
-- 打开首页即进入剪贴板；输入自动同步，或点「立即同步」。/ The first screen is the clipboard; typing auto-saves, or press Sync.
-- 「分享链接」可生成固定文本链接，设置有效期/阅后即焚/口令。/ Share link creates an immutable paste with expiry / burn / passphrase.
-- 「文件」可拖拽上传，其他设备下载；命令行：`curl -F "file=@notes.txt" http://<host>:5678/api/files`。/ Files tab uploads by drag-and-drop; CLI: `curl -F "file=@notes.txt" http://<host>:5678/api/files`.
-- 手机扫码：点击顶部「扫码」，用相机打开。/ Phone pairing: tap Scan and open the QR with your camera.
-- PWA：支持的浏览器可「添加到主屏」（需 HTTPS 或 localhost）。/ PWA: Add to Home Screen in supporting browsers (HTTPS or localhost).
+| | 本地模式（默认） | 公网模式 |
+| --- | --- | --- |
+| 开启 | 不设 `CLIPCLIP_ACCESS_TOKEN` | 设置该变量为强口令 |
+| 登录 | 无，打开即用 | 需输入访问口令 |
+| 场景 | 可信局域网 | 公网 |
 
-完整 API 与 curl 示例 / Full API and curl examples: [docs/API.md](docs/API.md)。
+公网部署务必前置 Cloudflare Access 或鉴权反代，详见 [安全说明](docs/SECURITY.md)。
 
-## 数据 / Data
+## 使用
 
-运行时数据保存在 `/data`（state JSON + 上传文件）；请定期备份该目录。/ Runtime data lives in `/data` (state JSON + uploads); back it up regularly. 容器以非 root 用户运行，绑定挂载目录需 `chown -R 1000:1000`。/ The container runs as non-root; bind-mounted data must be `chown -R 1000:1000`.
+- 首页即剪贴板，输入自动同步；「复制 / 立即同步 / 清空」。
+- 「分享链接」：输入文本，设置有效期 / 阅后即焚 / 口令，生成后复制链接。
+- 「文件」：拖拽上传；命令行 `curl -F "file=@notes.txt" http://<host>:5678/api/files`。
+- 命令行下载：`curl -OJ http://<host>:5678/api/files/<id>/download`。
 
-## 文档 / Documentation
+完整 API 见 [docs/API.md](docs/API.md)。PWA「添加到主屏」需 HTTPS 或 localhost。
 
-- [API 参考 / API reference](docs/API.md)
-- [安全与双模式 / Security & two modes](docs/SECURITY.md)
-- [架构 / Architecture](docs/ARCHITECTURE.md)
-- [产品需求 / Product requirements](docs/PRD.md)
-- [路线图 / Roadmap](docs/ROADMAP.md)
+## 文档
 
-## 许可 / License
+[API](docs/API.md) · [安全](docs/SECURITY.md) · [架构](docs/ARCHITECTURE.md) · [产品需求](docs/PRD.md) · [路线图](docs/ROADMAP.md)
 
-MIT — 见 / see [LICENSE](LICENSE)。
+MIT 许可 · [LICENSE](LICENSE)
