@@ -13,7 +13,7 @@
   --ink-soft: #55524b;
   --ink-faint: #8a857a;
   --rule: #d8d2c4;
-  --rule-strong: #b9b1a0;
+  --rule-strong: #8c8474;
   --vermilion: #c0392b;
   --vermilion-d: #96271c;
   --vermilion-w: #fff3f0;
@@ -45,7 +45,7 @@
     --ink-soft: #b8b2a4;
     --ink-faint: #8a857a;
     --rule: #37342e;
-    --rule-strong: #514c42;
+    --rule-strong: #6b6559;
     --vermilion: #e0604e;
     --vermilion-d: #f07b6a;
     --vermilion-w: rgba(224, 96, 78, 0.14);
@@ -371,7 +371,7 @@ button {
   border-bottom: 2px solid transparent;
   background: none;
   color: var(--ink-meta);
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: left;
@@ -417,21 +417,25 @@ button {
 
 .chapter-head {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: baseline;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
   column-gap: 16px;
-  row-gap: 10px;
+  row-gap: 6px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--rule);
 }
 
 .chapter-index {
-  font-size: 10px;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  font-size: 11px;
   letter-spacing: 0.12em;
   color: var(--ink-meta);
 }
 
 .chapter-title {
+  grid-column: 1;
+  grid-row: 2;
   font-family: var(--serif);
   font-weight: 500;
   font-size: clamp(22px, 2.6vw, 30px);
@@ -440,6 +444,8 @@ button {
 }
 
 .chapter-actions {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -448,7 +454,7 @@ button {
 
 .chapter-body {
   padding-top: 20px;
-  padding-left: 46px;
+  padding-left: 0;
 }
 
 .chapter-foot {
@@ -484,9 +490,9 @@ button {
   padding: 0 16px;
   border-radius: 2px;
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   line-height: 1.2;
   text-transform: uppercase;
   text-decoration: none;
@@ -525,7 +531,7 @@ button {
 .secondary-button,
 .alert-action {
   border: 1px solid var(--rule-strong);
-  background: transparent;
+  background: var(--paper-2);
   color: var(--ink);
 }
 
@@ -548,25 +554,29 @@ button {
 }
 
 .danger-button {
-  border: 0;
-  border-radius: 0;
-  padding: 0 2px;
-  background: none;
-  color: var(--ink-meta);
-  font-size: 11px;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  min-height: 40px;
+  min-width: 64px;
+  padding: 0 14px;
+  background: var(--paper-2);
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
 }
 
 .danger-button:hover {
+  border-color: var(--vermilion);
   color: var(--vermilion);
-  text-decoration-color: currentColor;
+  background: var(--vermilion-w);
 }
 
 .danger-button:disabled {
   color: var(--ink-faint);
-  text-decoration-color: transparent;
+  background: var(--paper);
   cursor: not-allowed;
 }
 
