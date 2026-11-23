@@ -1229,12 +1229,24 @@ body.modal-open {
 
 @media (max-width: 860px) {
   .chapter-head {
-    grid-template-columns: auto minmax(0, 1fr);
-    row-gap: 8px;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 10px;
+  }
+
+  .chapter-index {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .chapter-title {
+    grid-column: 1;
+    grid-row: 2;
   }
 
   .chapter-actions {
-    grid-column: 1 / -1;
+    grid-column: 1;
+    grid-row: 3;
+    justify-content: flex-start;
   }
 
   .chapter-body {
