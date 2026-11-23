@@ -74,3 +74,13 @@ What ClipClip adopts:
 4. Internal-tool UI beats marketing UI.
 5. Bilingual copy should stay short and operational.
 6. Advanced network setup belongs in docs, not in the critical path.
+
+## Principles from the UI/UX simplification round
+
+The精简 (simplification) refactor added these interaction principles:
+
+7. **Never show a dead shell.** UI controls bind independently of initial data loads; any failed request still leaves the interface operable with a retry path, and an expired/missing paste gets its own clear error page rather than a frozen app.
+8. **Don't let the network fight the user.** Local in-progress typing is never overwritten by a remote SSE update; changes are saved automatically (debounced), with an explicit "remote updated — apply/discard" prompt on conflict instead of silent text loss.
+9. **Lean by default.** Fewer DOM layers, no duplicated first-screen elements, modular UI code, and no render-blocking work — speed and clarity over decoration.
+10. **Accessible is not optional.** Adequate color contrast in both light and dark themes, ≥44px touch targets, no horizontal scrolling at narrow widths, and screen-reader status announcements (aria-live).
+11. **Security adapts to context, not to friction.** Local use stays zero-friction with no login prompt; the login screen appears only in public mode, so safety never intrudes on the trusted-LAN experience.

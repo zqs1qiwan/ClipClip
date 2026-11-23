@@ -1,5 +1,21 @@
+# Version control and team state
 .git
+.agent-teams
+.github
+
+# Runtime data and dependencies (data is a volume, never baked into the image)
 data
 node_modules
 work
 outputs
+coverage
+
+# Tests, docs and local backups are not needed in the image build context
+tests
+docs
+*.md
+*.bak-*
+
+# Local environment files must never be baked into the image
+.env
+.env.*

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="ClipClip — a clipboard for every screen you own">
+  <rect width="1200" height="630" fill="#F4F1EA"/>
+
+  <rect x="96" y="72" width="56" height="56" rx="2" fill="#C0392B"/>
+  <g transform="translate(124 100) scale(1.92) translate(-12 -12)" fill="none" stroke="#FBF9F4" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 0 0 8.49 6 6 0 0 0 8.49 0l9.19-9.19a4 4 0 0 0 0-5.66 4 4 0 0 0-5.66 0l-9.19 9.19a2 2 0 0 0 0 2.83 2 2 0 0 0 2.83 0l9.19-9.19"/>
+  </g>
+  <text x="168" y="110" fill="#55524B" font-family="SF Mono, Cascadia Code, Consolas, Liberation Mono, monospace" font-size="13" letter-spacing="3.4">CLIPCLIP · LOCAL-FIRST CLIPBOARD</text>
+
+  <text x="92" y="330" fill="#1C1B19" font-family="Iowan Old Style, Palatino Linotype, Palatino, Songti SC, Georgia, serif" font-size="132" font-weight="500" letter-spacing="-4">ClipClip</text>
+  <rect x="98" y="362" width="88" height="2" fill="#C0392B"/>
+  <text x="96" y="428" fill="#55524B" font-family="Iowan Old Style, Palatino Linotype, Palatino, Songti SC, Georgia, serif" font-size="34" letter-spacing="-0.4">A clipboard for every screen you own.</text>
+
+  <g transform="translate(960 268)" fill="none" stroke="#C0392B" stroke-width="1">
+    <rect x="-118" y="-118" width="236" height="236"/>
+  </g>
+  <g transform="translate(960 268) scale(7.4) translate(-12 -12)" fill="none" stroke="#C0392B" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 0 0 8.49 6 6 0 0 0 8.49 0l9.19-9.19a4 4 0 0 0 0-5.66 4 4 0 0 0-5.66 0l-9.19 9.19a2 2 0 0 0 0 2.83 2 2 0 0 0 2.83 0l9.19-9.19"/>
+  </g>
+  <text x="842" y="452" fill="#55524B" font-family="SF Mono, Cascadia Code, Consolas, Liberation Mono, monospace" font-size="10" letter-spacing="3">EST. 2026 · PAPER &amp; INK</text>
+
+  <line x1="96" y1="540" x2="1104" y2="540" stroke="#D8D2C4" stroke-width="1"/>
+  <text x="96" y="572" fill="#55524B" font-family="SF Mono, Cascadia Code, Consolas, Liberation Mono, monospace" font-size="12" letter-spacing="2.6">ZERO-DEPENDENCY · DOCKER-READY · MIT</text>
+  <text x="1104" y="572" fill="#55524B" text-anchor="end" font-family="SF Mono, Cascadia Code, Consolas, Liberation Mono, monospace" font-size="12" letter-spacing="2.6">v0.1.0</text>
+</svg>

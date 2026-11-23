@@ -41,3 +41,12 @@ Thumbs.db
 
 # Temporary workspace files
 work/
+
+# Agent team runtime state (not part of the product)
+.agent-teams/
+
+# Local backups (e.g. docker-compose.yml.bak-20261112-020035) must never be committed
+*.bak-*
+
+# Local backups (e.g. docker-compose.yml.bak-20261112-020035) must never be committed
+*.bak-*

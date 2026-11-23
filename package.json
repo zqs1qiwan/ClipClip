@@ -12,7 +12,13 @@
     "start": "node src/server/index.js",
     "build": "node scripts/build-check.js",
     "test": "node --test",
-    "lint": "node scripts/lint-check.js"
+    "lint": "node scripts/lint-check.js",
+    "verify": "npm run lint && npm run build && npm test",
+    "smoke": "sh scripts/docker-smoke.sh",
+    "docker:build": "docker build -t clipclip:0.1.0 .",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f --tail=100"
   },
   "license": "MIT"
 }

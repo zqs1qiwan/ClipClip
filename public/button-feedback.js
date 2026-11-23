@@ -2,7 +2,7 @@ const buttonTimers = new WeakMap();
 
 export function flashButtonState(
   button,
-  { idleLabel, activeLabel, tone = "neutral", durationMs = 1400 },
+  { idleLabel, activeLabel, tone = "neutral", durationMs = 1500 },
   deps = globalThis
 ) {
   if (!button) {

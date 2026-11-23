@@ -1,16 +1,89 @@
+# ClipClip single-container deployment (Docker Compose v2).
+#
+# Default = local mode: direct LAN access on http://<host>:5678 without application auth.
+# Public mode: set CLIPCLIP_ACCESS_TOKEN, narrow CLIPCLIP_BIND_IP to 127.0.0.1, and put
+# Cloudflare Access (or an authenticating reverse proxy) in front.
+# See README "Two deployment modes" and docs/SECURITY.md.
+name: clipclip
+
 services:
   clipclip:
+    image: clipclip:0.1.0
     build: .
     container_name: clipclip
+    # tini as PID 1: reaps orphans and forwards SIGTERM (the app has no signal handler yet).
+    init: true
     restart: unless-stopped
+    stop_grace_period: 20s
     ports:
-      - "5678:5678"
+      # host-ip:host-port:container-port. Use CLIPCLIP_BIND_IP=127.0.0.1 in public mode so
+      # LAN clients cannot bypass the front-door authenticator.
+      - "${CLIPCLIP_BIND_IP:-0.0.0.0}:${CLIPCLIP_HOST_PORT:-5678}:${CLIPCLIP_PORT:-5678}"
     environment:
-      CLIPCLIP_HOST: 0.0.0.0
-      CLIPCLIP_PORT: 5678
-      CLIPCLIP_DATA_DIR: /data
-      CLIPCLIP_MAX_UPLOAD_MB: 50
-      CLIPCLIP_PASTE_TTL_HOURS: 24
-      CLIPCLIP_FILE_TTL_HOURS: 24
+      # Keep 0.0.0.0 inside the container when publishing ports (loopback bind breaks DNAT).
+      CLIPCLIP_HOST: "${CLIPCLIP_HOST:-0.0.0.0}"
+      CLIPCLIP_PORT: "${CLIPCLIP_PORT:-5678}"
+      CLIPCLIP_DATA_DIR: "/data"
+      CLIPCLIP_MAX_UPLOAD_MB: "${CLIPCLIP_MAX_UPLOAD_MB:-50}"
+      CLIPCLIP_RECENT_FILES_LIMIT: "${CLIPCLIP_RECENT_FILES_LIMIT:-10}"
+      CLIPCLIP_PASTE_TTL_HOURS: "${CLIPCLIP_PASTE_TTL_HOURS:-24}"
+      CLIPCLIP_PASTE_TTL_MAX_HOURS: "${CLIPCLIP_PASTE_TTL_MAX_HOURS:-168}"
+      CLIPCLIP_PASTE_CONTENT_LIMIT: "${CLIPCLIP_PASTE_CONTENT_LIMIT:-524288}"
+      CLIPCLIP_FILE_TTL_HOURS: "${CLIPCLIP_FILE_TTL_HOURS:-24}"
+      CLIPCLIP_CLEANUP_INTERVAL_MS: "${CLIPCLIP_CLEANUP_INTERVAL_MS:-60000}"
+      CLIPCLIP_LIVE_CONTENT_LIMIT: "${CLIPCLIP_LIVE_CONTENT_LIMIT:-100000}"
+      CLIPCLIP_PUBLIC_BASE_URL: "${CLIPCLIP_PUBLIC_BASE_URL:-}"
+      CLIPCLIP_MAX_SSE_CLIENTS: "${CLIPCLIP_MAX_SSE_CLIENTS:-100}"
+      CLIPCLIP_SSE_HEARTBEAT_MS: "${CLIPCLIP_SSE_HEARTBEAT_MS:-25000}"
+      CLIPCLIP_SSE_IDLE_TIMEOUT_MS: "${CLIPCLIP_SSE_IDLE_TIMEOUT_MS:-300000}"
+      # Application-level token for public mode. Empty = local mode.
+      CLIPCLIP_ACCESS_TOKEN: "${CLIPCLIP_ACCESS_TOKEN:-}"
+      CLIPCLIP_SESSION_TTL_SECONDS: "${CLIPCLIP_SESSION_TTL_SECONDS:-86400}"
+      # Trust X-Forwarded-For for rate limiting ONLY behind a trusted reverse proxy /
+      # Cloudflare Tunnel where XFF is overwritten. Never enable if the app is directly
+      # exposed, otherwise clients can forge XFF to bypass login rate limits.
+      CLIPCLIP_TRUST_PROXY: "${CLIPCLIP_TRUST_PROXY:-0}"
     volumes:
+      # Default: bind mount, data stays on the host NVMe path and is easy to back up with tar.
+      # One-time host setup: mkdir -p data && chown -R 1000:1000 data
       - ./data:/data
+    # Named-volume alternative (pick one): comment out the bind mount above, uncomment below.
+    # No chown needed (Docker copies /data ownership from the image), but the volume lives
+    # under /var/lib/docker/volumes, so make sure that path is on a disk with room.
+    # - clipclip-data:/data
+    read_only: true
+    tmpfs:
+      # Upload staging currently uses the container's /tmp (os.tmpdir()); shrink to
+      # size=16m once staging moves to /data/tmp. Docker's default tmpfs mode is 1777.
+      - /tmp:size=96m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      # Same probe as the Dockerfile HEALTHCHECK (shared script, single source of truth).
+      test: ["CMD", "node", "scripts/healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      # Bounded json-file logs so a long-running container cannot fill the NVMe disk.
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    deploy:
+      # Single-host Compose applies deploy.resources.limits. Do not also set legacy
+      # mem_limit/cpus/pids_limit: the Compose Specification requires both spellings to match.
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512m
+          pids: 256
+
+volumes:
+  # Used only by the named-volume alternative above. The explicit name keeps the volume
+  # addressable as `clipclip-data` (never `clipclip_clipclip-data`) for backup commands.
+  clipclip-data:
+    name: clipclip-data

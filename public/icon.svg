@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ClipClip">
+  <rect width="64" height="64" rx="2" fill="#C0392B"/>
+  <g transform="translate(32 32) scale(2.2) translate(-12 -12)" fill="none" stroke="#FBF9F4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 0 0 8.49 6 6 0 0 0 8.49 0l9.19-9.19a4 4 0 0 0 0-5.66 4 4 0 0 0-5.66 0l-9.19 9.19a2 2 0 0 0 0 2.83 2 2 0 0 0 2.83 0l9.19-9.19"/>
+  </g>
+</svg>

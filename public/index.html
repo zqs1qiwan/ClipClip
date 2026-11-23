@@ -1,143 +1,403 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#F4F1EA" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#171715" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="ClipClip — a local-first clipboard for text, paste links and small files." />
     <title>ClipClip</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/brand/logo-mark.svg" />
+    <link rel="apple-touch-icon" href="/brand/icon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ClipClip" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand-row">
-          <strong class="brand-name">ClipClip</strong>
-          <span class="badge" id="connection-badge">Connecting</span>
-        </div>
+    <div class="page" id="app-shell">
+      <header class="masthead">
+        <a class="masthead-brand" href="/" aria-label="ClipClip">
+          <img class="brand-mark" src="/brand/logo-mark.svg" alt="" width="26" height="26" />
+          <span class="brand-word">CLIPCLIP</span>
+        </a>
 
-        <div class="toolbar">
-          <div class="endpoint-box">
-            <span class="endpoint-label" data-i18n="topbar.endpointLabel">Access</span>
-            <code class="endpoint-value" id="endpoint-value">http://clip.clip:5678</code>
+        <div class="masthead-meta">
+          <span
+            class="status"
+            id="connection-badge"
+            data-state="connecting"
+            role="status"
+            aria-live="polite"
+          >连接中</span>
+
+          <div class="lang-switch" role="group" data-i18n-aria-label="lang.group" aria-label="语言">
+            <button class="lang-button is-active" type="button" data-lang="zh" aria-pressed="true">中</button>
+            <button class="lang-button" type="button" data-lang="en" aria-pressed="false">EN</button>
           </div>
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button class="lang-button" type="button" data-lang="zh">&#20013;</button>
-            <button class="lang-button is-active" type="button" data-lang="en">EN</button>
-          </div>
+
+          <button class="text-button" id="qr-button" type="button" data-i18n="actions.qr">扫码</button>
+          <button class="text-button" id="logout-button" type="button" data-i18n="actions.logout" hidden>退出</button>
         </div>
       </header>
 
-      <nav class="tabbar" aria-label="ClipClip tools">
-        <button class="tab-button is-active" type="button" data-tab="live" data-i18n="tabs.live">Clipboard</button>
-        <button class="tab-button" type="button" data-tab="paste" data-i18n="tabs.paste">Share Link</button>
-        <button class="tab-button" type="button" data-tab="files" data-i18n="tabs.files">Files</button>
+      <p class="alert" id="app-alert" data-alert role="alert" hidden>
+        <span class="alert-text"></span>
+        <button class="alert-action" type="button" hidden></button>
+      </p>
+
+      <nav class="chapters" role="tablist" data-i18n-aria-label="tabs.label" aria-label="ClipClip 工具">
+        <button
+          class="tab-button is-active"
+          type="button"
+          role="tab"
+          id="tab-live"
+          data-tab="live"
+          data-index="01"
+          aria-controls="panel-live"
+          aria-selected="true"
+          data-i18n="tab.live"
+        >剪贴板</button>
+        <button
+          class="tab-button"
+          type="button"
+          role="tab"
+          id="tab-paste"
+          data-tab="paste"
+          data-index="02"
+          aria-controls="panel-paste"
+          aria-selected="false"
+          tabindex="-1"
+          data-i18n="tab.paste"
+        >分享链接</button>
+        <button
+          class="tab-button"
+          type="button"
+          role="tab"
+          id="tab-files"
+          data-tab="files"
+          data-index="03"
+          aria-controls="panel-files"
+          aria-selected="false"
+          tabindex="-1"
+          data-i18n="tab.files"
+        >文件</button>
       </nav>
 
       <main class="workspace">
-        <section class="tool-panel" data-panel="live">
-          <div class="panel-header">
-            <h1 class="panel-title" data-i18n="live.title">Live Clipboard</h1>
-            <div class="inline-actions">
-              <button id="live-copy-button" class="secondary-button" type="button" data-i18n="actions.copy">Copy</button>
-              <button id="live-clear-button" class="secondary-button" type="button" data-i18n="actions.clear">Clear</button>
-              <button id="live-save-button" type="button" data-i18n="actions.sync">Sync</button>
+        <section class="chapter" id="panel-live" data-panel="live" role="tabpanel" aria-labelledby="tab-live">
+          <div class="chapter-head">
+            <span class="chapter-index" aria-hidden="true">§ 01</span>
+            <h2 class="chapter-title" data-i18n="live.title">实时剪贴板</h2>
+            <div class="chapter-actions actions">
+              <button class="secondary-button copy-feedback-button" id="live-copy" type="button" data-i18n="live.copy">复制</button>
+              <button class="primary-button" id="live-sync" type="button" data-i18n="live.sync">立即同步</button>
             </div>
           </div>
 
-          <textarea
-            id="live-textarea"
-            aria-label="Live clipboard"
-            data-i18n-placeholder="live.placeholder"
-            placeholder="Paste or type text here"
-          ></textarea>
+          <div class="chapter-body">
+            <p class="callout notice" id="remote-notice" role="status" aria-live="polite" hidden>
+              <span class="callout-text" data-i18n="live.remote">远端已更新</span>
+              <button class="secondary-button" id="remote-apply" type="button" data-i18n="live.apply">应用</button>
+              <button class="text-button" id="remote-dismiss" type="button" data-i18n="live.dismiss">放弃</button>
+            </p>
 
-          <footer class="panel-footer">
-            <span class="muted-text" id="live-updated-at">Waiting for first update.</span>
-          </footer>
+            <textarea
+              class="text-area text-area--hero"
+              id="live-textarea"
+              data-i18n-placeholder="live.placeholder"
+              data-i18n-aria-label="live.title"
+              aria-label="实时剪贴板"
+              placeholder="在这里粘贴或输入文本"
+            ></textarea>
+
+            <div class="chapter-foot">
+              <span class="status mono muted" id="live-status" role="status" aria-live="polite" data-tone="muted">等待首次同步</span>
+              <button class="danger-button" id="live-clear" type="button" data-i18n="live.clear" disabled>清空</button>
+            </div>
+
+            <p class="alert" id="live-alert" data-alert role="alert" hidden>
+              <span class="alert-text"></span>
+              <button class="alert-action" type="button" hidden></button>
+            </p>
+          </div>
         </section>
 
-        <section class="tool-panel" data-panel="paste" hidden>
-          <div class="panel-header">
-            <h1 class="panel-title" data-i18n="paste.title">Share Link</h1>
-            <div class="inline-actions">
-              <button id="paste-fill-live-button" class="secondary-button" type="button" data-i18n="actions.useLive">
-                Use clipboard text
-              </button>
-              <button id="paste-create-button" type="button" data-i18n="actions.createLink">Create</button>
+        <section class="chapter" id="panel-paste" data-panel="paste" role="tabpanel" aria-labelledby="tab-paste" hidden>
+          <div class="chapter-head">
+            <span class="chapter-index" aria-hidden="true">§ 02</span>
+            <h2 class="chapter-title" data-i18n="paste.title">分享链接</h2>
+            <div class="chapter-actions actions">
+              <button class="secondary-button" id="paste-fill" type="button" data-i18n="paste.useLive">使用剪贴板内容</button>
+              <button class="primary-button" id="paste-create" type="button" data-i18n="paste.create">生成</button>
             </div>
           </div>
 
-          <div class="split-layout">
-            <div class="input-column">
+          <div class="chapter-body">
+            <div class="paste-grid">
               <textarea
+                class="text-area"
                 id="paste-textarea"
-                aria-label="Paste source"
                 data-i18n-placeholder="paste.placeholder"
-                placeholder="Text for a fixed share link"
+                data-i18n-aria-label="paste.title"
+                aria-label="分享链接"
+                placeholder="输入要固定分享的文本"
               ></textarea>
-            </div>
 
-            <aside class="result-box" id="paste-result">No share link yet.</aside>
+              <div class="paste-side">
+                <div class="field">
+                  <label class="field-label" for="paste-expiry" data-i18n="paste.expiry">有效期</label>
+                  <select class="select" id="paste-expiry">
+                    <option value="" data-i18n="paste.expiryDefault">服务器默认</option>
+                    <option value="1" data-i18n="paste.expiry1h">1 小时</option>
+                    <option value="24" data-i18n="paste.expiry24h">24 小时</option>
+                    <option value="168" data-i18n="paste.expiry7d">7 天</option>
+                  </select>
+                </div>
+
+                <label class="checkbox-field" for="paste-burn">
+                  <input type="checkbox" id="paste-burn" />
+                  <span data-i18n="paste.burnLabel">阅后即焚</span>
+                </label>
+
+                <div class="field">
+                  <label class="field-label" for="paste-passphrase" data-i18n="paste.passphraseLabel">访问口令（可选）</label>
+                  <input
+                    class="text-input"
+                    id="paste-passphrase"
+                    type="password"
+                    autocomplete="new-password"
+                    maxlength="128"
+                  />
+                </div>
+
+                <div class="result-box" id="paste-result" role="status" aria-live="polite">还没有分享链接</div>
+
+                <p class="alert" id="paste-alert" data-alert role="alert" hidden>
+                  <span class="alert-text"></span>
+                  <button class="alert-action" type="button" hidden></button>
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section class="tool-panel" data-panel="files" hidden>
-          <div class="panel-header">
-            <h1 class="panel-title" data-i18n="file.title">File Transfer</h1>
+        <section class="chapter" id="panel-files" data-panel="files" role="tabpanel" aria-labelledby="tab-files" hidden>
+          <div class="chapter-head">
+            <span class="chapter-index" aria-hidden="true">§ 03</span>
+            <h2 class="chapter-title" data-i18n="files.title">文件中转</h2>
           </div>
 
-          <div class="files-shell">
-            <div class="files-hero">
-              <section class="file-box upload-panel">
-                <label class="upload-box" for="file-input">
-                  <input id="file-input" type="file" />
-                  <span class="upload-title" data-i18n="file.dropTitle">Drop a file here</span>
-                  <span class="upload-subtitle" id="file-input-label" data-i18n="file.select">Choose a file</span>
+          <div class="chapter-body">
+            <div class="ledger">
+              <section class="ledger-cell">
+                <label class="dropzone" for="file-input" tabindex="0">
+                  <input id="file-input" type="file" hidden />
+                  <span class="drop-title" data-i18n="files.dropTitle">拖入文件</span>
+                  <span class="drop-sub" data-i18n="files.dropSubtitle">或从本机选择</span>
+                  <span class="drop-file mono" id="file-input-label">选择文件</span>
                 </label>
-                <div class="upload-actions">
-                  <button id="file-browse-button" class="secondary-button" type="button" data-i18n="actions.choose">Choose</button>
-                  <button id="file-upload-button" type="button" data-i18n="actions.upload">Upload</button>
+
+                <div class="actions">
+                  <button class="secondary-button" id="file-browse" type="button" data-i18n="files.choose">选择</button>
+                  <button class="primary-button" id="file-upload" type="button" data-i18n="files.upload" disabled>上传</button>
                 </div>
-                <p class="muted-text selection-meta" id="file-selection-meta" data-i18n="file.selectHint">
-                  Newest 10 files stay in the queue.
+
+                <p class="mono muted" id="file-selection-meta"></p>
+
+                <div
+                  class="progress"
+                  id="upload-progress"
+                  role="progressbar"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  data-i18n-aria-label="files.progressLabel"
+                  aria-label="上传进度"
+                ><span id="upload-bar"></span></div>
+
+                <p class="mono muted" id="upload-status" role="status" aria-live="polite">准备就绪</p>
+
+                <p class="alert" id="upload-alert" data-alert role="alert" hidden>
+                  <span class="alert-text"></span>
+                  <button class="alert-action" type="button" hidden></button>
                 </p>
-                <div class="progress-track" aria-hidden="true">
-                  <span id="upload-progress-bar"></span>
-                </div>
-                <p class="muted-text" id="upload-status" data-i18n="file.idle">Ready.</p>
               </section>
 
-              <section class="latest-panel">
-                <div class="section-head">
-                  <strong data-i18n="file.latestTitle">Ready to download</strong>
-                </div>
-                <div class="result-box align-start file-current-box" id="file-current">No files in the queue yet.</div>
+              <section class="ledger-cell">
+                <p class="label mono" data-i18n="files.latest">当前可下载</p>
+                <div class="result-box result-box--bare" id="file-current">队列里还没有文件</div>
               </section>
             </div>
 
-            <section class="history-panel">
+            <section class="history-card">
               <div class="section-head">
-                <strong data-i18n="file.queueTitle">Recent uploads</strong>
-                <span class="muted-text" id="file-count">0 files</span>
+                <p class="label mono" data-i18n="files.queue">最近上传</p>
+                <span class="mono muted" id="file-count"></span>
               </div>
-              <p class="muted-text history-empty-state" id="file-history-empty" data-i18n="file.historyEmpty">Upload history will appear here.</p>
-              <ul class="history-list" id="file-history-list"></ul>
+              <p class="mono muted empty" id="file-history-empty" data-i18n="files.historyEmpty">上传记录会显示在这里</p>
+              <ul class="history" id="file-history"></ul>
             </section>
           </div>
         </section>
       </main>
+
+      <footer class="colophon">
+        <p class="colophon-line mono">
+          <span class="brand-word">CLIPCLIP</span>
+          <span class="colophon-sep" aria-hidden="true">·</span>
+          <span id="app-version">v0.1.0</span>
+        </p>
+      </footer>
     </div>
 
-    <template id="paste-view-template">
-      <div class="paste-shell">
-        <section class="tool-panel paste-panel">
-          <div class="panel-header">
-            <h1 class="panel-title" data-i18n="paste.viewTitle">Shared Paste</h1>
-            <button id="paste-view-copy-button" type="button" data-i18n="actions.copy">Copy</button>
-          </div>
-          <pre id="paste-view-content"></pre>
-          <p class="muted-text" id="paste-view-meta"></p>
-        </section>
+    <section class="gate" id="login-view" hidden>
+      <div class="gate-brand" aria-hidden="true">
+        <img class="brand-mark" src="/brand/logo-mark.svg" alt="" width="30" height="30" />
+        <span class="brand-word">CLIPCLIP</span>
       </div>
+
+      <form class="gate-form" id="login-form">
+        <h1 class="gate-title" id="login-hint" data-i18n="auth.hint">此实例需要访问口令。</h1>
+
+        <div class="field">
+          <label class="field-label" for="login-token" data-i18n="auth.tokenLabel">访问口令</label>
+          <input
+            class="text-input"
+            id="login-token"
+            type="password"
+            autocomplete="current-password"
+            spellcheck="false"
+            required
+          />
+        </div>
+
+        <button class="primary-button" id="login-submit" type="submit" data-i18n="auth.submit">进入</button>
+
+        <p class="alert" id="login-error" data-alert role="alert" hidden>
+          <span class="alert-text"></span>
+          <button class="alert-action" type="button" hidden></button>
+        </p>
+      </form>
+    </section>
+
+    <section class="paste-shell" id="paste-view" hidden>
+      <header class="paste-brand">
+        <img class="brand-mark" src="/brand/logo-mark.svg" alt="" width="24" height="24" />
+        <span class="brand-word">CLIPCLIP</span>
+      </header>
+
+      <article class="paste-doc">
+        <div class="paste-head">
+          <div>
+            <h1 class="paste-title" data-i18n="pastePage.title">分享内容</h1>
+          </div>
+          <div class="paste-tools">
+            <span class="mini-badge" id="paste-burn-badge" data-i18n="paste.burnBadge" hidden>阅后即焚</span>
+            <button class="primary-button copy-feedback-button" id="paste-copy" type="button" data-i18n="actions.copy">复制</button>
+          </div>
+        </div>
+
+        <pre class="paste-content" id="paste-content"></pre>
+        <p class="mono muted" id="paste-meta"></p>
+      </article>
+    </section>
+
+    <section class="gate" id="paste-error" hidden>
+      <div class="gate-card">
+        <h1 class="gate-title" data-i18n="pastePage.unavailable">分享内容不可用。</h1>
+        <p class="gate-lead muted" id="paste-error-message"></p>
+        <div class="actions">
+          <button class="secondary-button" id="paste-error-retry" type="button">重试</button>
+          <a class="primary-button" id="paste-error-back" href="/">返回剪贴板</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="gate" id="paste-lock" hidden>
+      <div class="gate-brand" aria-hidden="true">
+        <img class="brand-mark" src="/brand/logo-mark.svg" alt="" width="30" height="30" />
+        <span class="brand-word">CLIPCLIP</span>
+      </div>
+
+      <form class="gate-form" id="paste-lock-form">
+        <h1 class="gate-title" data-i18n="pasteLock.title">此粘贴受口令保护</h1>
+        <p class="gate-lead muted" data-i18n="pasteLock.hint">输入访问口令后查看内容。</p>
+
+        <div class="field">
+          <label class="field-label" for="paste-lock-passphrase" data-i18n="pasteLock.passphraseLabel">访问口令</label>
+          <input
+            class="text-input"
+            id="paste-lock-passphrase"
+            type="password"
+            autocomplete="current-password"
+            spellcheck="false"
+            maxlength="128"
+            required
+          />
+        </div>
+
+        <button class="primary-button" id="paste-lock-submit" type="submit" data-i18n="pasteLock.submit">查看内容</button>
+
+        <p class="alert" id="paste-lock-error" data-alert role="alert" hidden>
+          <span class="alert-text"></span>
+          <button class="alert-action" type="button" hidden></button>
+        </p>
+      </form>
+    </section>
+
+    <div class="modal" id="qr-modal" hidden>
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+        <header class="modal-head">
+          <h2 class="modal-title" id="qr-modal-title" data-i18n="qr.title">扫码打开</h2>
+          <button class="text-button" id="qr-close" type="button" data-i18n="qr.close">关闭</button>
+        </header>
+
+        <div class="qr-frame">
+          <div class="qr-code" id="qr-code"></div>
+        </div>
+
+        <p class="mono muted" data-i18n="qr.hint">用手机相机扫码打开 ClipClip。</p>
+
+        <div class="field">
+          <span class="field-label" data-i18n="qr.urlLabel">访问地址</span>
+          <code class="qr-url" id="qr-url"></code>
+        </div>
+
+        <button class="secondary-button copy-feedback-button" id="qr-copy" type="button" data-i18n="qr.copy">复制链接</button>
+      </div>
+    </div>
+
+    <p class="visually-hidden" id="a11y-status" role="status" aria-live="polite"></p>
+
+    <template id="tpl-result-card">
+      <div class="result-card">
+        <div class="result-head">
+          <strong class="result-title"></strong>
+          <span class="mini-badge" hidden></span>
+        </div>
+        <div class="result-sub"></div>
+        <div class="result-actions">
+          <a class="link-button" target="_blank" rel="noopener noreferrer"></a>
+          <button class="secondary-button small-button copy-feedback-button" type="button" data-role="copy"></button>
+          <span class="result-meta muted"></span>
+        </div>
+      </div>
+    </template>
+
+    <template id="tpl-history-item">
+      <li class="history-item">
+        <div class="history-meta">
+          <strong class="history-title"></strong>
+          <span class="history-sub muted"></span>
+          <span class="history-meta-line muted"></span>
+        </div>
+        <div class="history-actions">
+          <a class="secondary-link" target="_blank" rel="noopener noreferrer"></a>
+          <button class="text-button copy-feedback-button" type="button" data-role="copy"></button>
+        </div>
+      </li>
     </template>
 
     <script type="module" src="/app.js"></script>
