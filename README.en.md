@@ -4,6 +4,8 @@
 
 # ClipClip
 
+[![Stars](https://img.shields.io/github/stars/zqs1qiwan/ClipClip?style=flat-square&logo=github)](https://github.com/zqs1qiwan/ClipClip/stargazers) [![License: MIT](https://img.shields.io/github/license/zqs1qiwan/ClipClip?style=flat-square)](LICENSE) [![Docker Image](https://img.shields.io/docker/v/zqs1qiwan/clipclip?style=flat-square&logo=docker&label=docker)](https://hub.docker.com/r/zqs1qiwan/clipclip) [![Docker Pulls](https://img.shields.io/docker/pulls/zqs1qiwan/clipclip?style=flat-square&logo=docker)](https://hub.docker.com/r/zqs1qiwan/clipclip)
+
 English · [简体中文](README.md)
 
 A self-hosted web clipboard: live text sync, immutable share links, and small file drops. No client app — just a browser.
