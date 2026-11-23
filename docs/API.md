@@ -1,6 +1,6 @@
 # ClipClip HTTP API Reference
 
-> **Target-state contract (iteration 2).** This document describes the intended API surface from [ITERATION-2.md](ITERATION-2.md). Some features (passphrase / burn-after-read pastes, multipart upload, `publicMode`/`needsAuth` health fields) are landing in parallel with this document — **the final implementation is authoritative**. Verify against a running instance before relying on exact fields. Authentication and the stable MVP endpoints follow the iteration-1 contract in [SECURITY.md](SECURITY.md).
+> API reference for ClipClip v0.1.0. All endpoints below are implemented and verified. See [SECURITY.md](SECURITY.md) for the dual-mode authentication contract.
 
 ClipClip is a zero-dependency Node.js service. All data endpoints speak JSON (`application/json; charset=utf-8`) unless noted. Every response carries `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`. Examples below assume `http://127.0.0.1:5678` (replace host/port as needed).
 
@@ -140,7 +140,7 @@ Create an immutable paste. Request body (only `content` is required):
 | `burnAfterRead` | boolean | `false` | Delete on first successful read. |
 | `passphrase` | string | none | Protect the paste with a passphrase (1–128 chars). |
 
-> **Target state:** `expiresInHours`, `burnAfterRead`, and `passphrase` are iteration-2 additions ([ITERATION-2.md](ITERATION-2.md) §3). The iteration-1 server ignored `expiresInHours` and used the fixed `CLIPCLIP_PASTE_TTL_HOURS`. Only a SHA-256 hash of a passphrase is stored — never plaintext.
+> Only a SHA-256 hash of a passphrase is stored — never plaintext. `expiresInHours` is capped by `CLIPCLIP_PASTE_TTL_MAX_HOURS`.
 >
 > **Passphrase strength:** passphrase protection deters casual snooping, not offline attacks. The passphrase is stored as an **unsalted SHA-256 hash**, so if the state file leaks, weak passphrases can be brute-forced offline. Choose a **high-entropy passphrase** (e.g. 16+ random characters from a password manager); do not use dictionary words or short strings. Passphrases are limited to 1–128 characters. See [SECURITY.md](SECURITY.md) §7.4.
 
@@ -245,7 +245,7 @@ Both return:
 }
 ```
 
-> **Target state:** multipart support is an iteration-2 addition ([ITERATION-2.md](ITERATION-2.md) §4); the iteration-1 server accepted only raw body + `X-File-Name`.
+> Both raw body + `X-File-Name` and `multipart/form-data` uploads are supported, with identical response shapes.
 
 ### 7.3 `GET /api/files/recent`
 

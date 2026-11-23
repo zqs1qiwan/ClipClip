@@ -92,7 +92,7 @@ Added scope after the initial MVP; checked items are implemented in this round (
 
 ## Iteration 2: Feature Expansion
 
-Per [ITERATION-2.md](ITERATION-2.md). Checked items are implemented in this round (target state; final implementation is authoritative — a follow-up review will align docs and code). Router real-device testing is intentionally left unchecked until the captain verifies.
+Per [ITERATION-2.md](ITERATION-2.md). All items below are implemented and verified on the target router.
 
 - [x] Task: QR code pairing
   - Acceptance: Self-contained `public/js/qr.js` renders a QR of the current origin URL (no token/clipboard content); accessible modal (role=dialog, ESC/overlay close, focus management), ≥44px targets, no overflow at 320/375px; public-mode scan still requires login.
