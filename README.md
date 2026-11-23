@@ -69,7 +69,29 @@ curl -OJ -fsS "$BASE/api/files/<id>/download"    # -OJ keeps the server filename
 
 ### Docker deployment (recommended)
 
-Build and run the container on a Linux host: Docker cannot reliably use a Windows SMB/UNC path as a build context or bind-mount source. The reference target is the LAN router at `192.168.2.1` (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)).
+#### Fastest start — use the published image
+
+A Linux amd64 image is published on Docker Hub as [`zqs1qiwan/clipclip`](https://hub.docker.com/r/zqs1qiwan/clipclip). No source checkout is needed:
+
+```bash
+docker run -d --name clipclip \
+  --restart unless-stopped \
+  -p 5678:5678 \
+  -v /srv/clipclip/data:/data \
+  zqs1qiwan/clipclip:0.1.0
+```
+
+Use `:latest` to follow the newest release, or pin `:0.1.0` for a stable version. On first run with a **bind mount**, make the host directory writable by the container user (`uid/gid 1000`):
+
+```bash
+mkdir -p /srv/clipclip/data && chown -R 1000:1000 /srv/clipclip/data
+```
+
+Then open `http://<host-ip>:5678`. To expose it publicly, see [Two modes](#two-modes) and [docs/SECURITY.md](docs/SECURITY.md). A complete compose example with healthcheck, hardening and environment variables is in [docker-compose.yml](docker-compose.yml); all settings are listed in [.env.example](.env.example).
+
+#### Build from source
+
+Alternatively, build the image yourself on a Linux host: Docker cannot reliably use a Windows SMB/UNC path as a build context or bind-mount source. The reference target is the LAN router at `192.168.2.1` (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)).
 
 ```bash
 docker compose config -q        # validate the compose file (no container started)
